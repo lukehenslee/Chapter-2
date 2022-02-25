@@ -38,13 +38,17 @@ codes_2020 <- rec[c(25:29), 2]
 
 codes_2021 <- rec[c(67:71), 2]
 
-## Filter for beacon ID's ####
+## Filter for beacon ID's and dates ####
 rec5.20 <- rec5.6_20 %>% 
-  filter(Tag.ID %in% codes_2020)
+  filter(Tag.ID %in% codes_2020) %>% 
+  filter(as.Date(mdy(Date)) > as.Date(mdy(rec[30,3])), 
+         as.Date(mdy(Date)) < as.Date(mdy(rec[30,5])))
 
 
 rec5.21 <- rec5.6_21 %>% 
-  filter(Tag.ID %in% codes_2021)
+  filter(Tag.ID %in% codes_2021) %>% 
+  filter(as.Date(mdy(Date)) > as.Date(mdy(rec[72,3])), 
+         as.Date(mdy(Date)) < as.Date(mdy(rec[72,5])))
 
 ## Merge with metadata ####
 
@@ -87,10 +91,9 @@ rec5.21 <- rec5.21 %>%
 
 ## Stack overflow question ####
 ## 2020 
-rec5.20$posix <- rec5.20$unix
 
 rec5.20.det <- rec5.20 %>% 
-  mutate(hour = 1 + ((posix - min(posix)) %/% 3600)) |>
+  mutate(hour = 1 + ((unix - min(unix)) %/% 3600)) |>
   mutate(hour = factor(hour, levels = seq(1, max(hour)))) |>
   mutate(code = factor(code)) |>
   group_by(hour, code, .drop = FALSE) |>
@@ -138,3 +141,28 @@ rec5.21.prop$dist <- abs(rec5.21.prop$dist.shore - 2600)
 
 ggplot(data = rec5.21.prop, aes(x = dist, y = prop, fill = as.factor(dist))) +
   geom_violin()
+
+#### Both years
+rec5.prop <- rbind(rec5.20.prop, rec5.21.prop)
+
+ggplot(data = rec5.prop, aes(x = dist, y = prop, fill = as.factor(dist))) +
+  geom_violin()
+
+ggplot(data = rec5.20.prop, aes(x = as.numeric(hour), y = prop, col = as.factor(dist))) +
+  geom_line() +
+  geom_smooth() +
+  facet_wrap(~as.factor(dist))
+
+ggplot(data = rec5.20.prop, aes(x = prop)) +
+  geom_histogram() +
+  facet_wrap(~as.factor(dist))
+
+ggplot(data = rec5.21.prop, aes(x = as.numeric(hour), y = prop, col = as.factor(dist))) +
+  geom_line() +
+  geom_smooth() +
+  facet_wrap(~as.factor(dist))
+
+ggplot(data = rec5.prop, aes(x = as.numeric(hour), y = prop, col = as.factor(dist))) +
+  geom_line() +
+  geom_smooth() +
+  facet_wrap(~as.factor(dist))
