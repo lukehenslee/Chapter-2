@@ -19,108 +19,157 @@ library(magrittr)
 
 # Set working directory ####
 setwd("C:/Users/lukeh/Desktop/School/Thesis/Chapter_2")
-setwd("C:/Users/lhhenslee/Desktop/Luke/School/Thesis/Chapter 2")
+setwd("C:/Users/lhhenslee/Desktop/Luke/School/Thesis/Chapter 2/Chapter-2")
 
 # Import data ####
 ## Receiver metadata
 rec <- read.csv('data/rec.csv')
 
-rec5.6_20 <- read.csv('data/range_test/blueberry_2020.csv', skip = 45)
-rec5.6_20 <- rec5.6_20[,c(1:2, 4, 7)]
+## Receiver 5.6
+rec20 <- read.csv('data/blueberry_2020.csv', skip = 45)
+rec20 <- rec20[,c(1:2, 4, 7)]
 
-rec5.6_21 <- read.csv('data/range_test/blueberry_2021.csv', skip = 45)
-rec5.6_21 <- rec5.6_21[,c(1:2, 4, 7)]
+rec21 <- read.csv('data/blueberry_2021.csv', skip = 45)
+rec21 <- rec21[,c(1:2, 4, 7)]
 
 # Data manipulation ####
 
-## Receiver metadata ####
-codes_2020 <- rec[c(25:29), 2]
-
-codes_2021 <- rec[c(67:71), 2]
-
 ## Filter for beacon ID's and dates ####
-rec5.20 <- rec5.6_20 %>% 
-  filter(Tag.ID %in% codes_2020) %>% 
+
+### 2020
+rec20 <- rec20 %>% 
+  filter(Tag.ID %in% rec[c(25:29), 2]) %>% 
   filter(as.Date(mdy(Date)) > as.Date(mdy(rec[30,3])), 
          as.Date(mdy(Date)) < as.Date(mdy(rec[30,5])))
 
-
-rec5.21 <- rec5.6_21 %>% 
-  filter(Tag.ID %in% codes_2021) %>% 
+### 2021
+rec21 <- rec21 %>% 
+  filter(Tag.ID %in% rec[c(67:71), 2]) %>% 
   filter(as.Date(mdy(Date)) > as.Date(mdy(rec[72,3])), 
          as.Date(mdy(Date)) < as.Date(mdy(rec[72,5])))
 
 ## Merge with metadata ####
 
-## 2020
-rec5.20$code <- rec5.20$Tag.ID
-rec5.20$year <- rep('2020', nrow(rec5.20))
+rec$year <- year(mdy(rec$deploy.date))
 
-rec5.20 <- merge(rec5.20, rec, by = c('year', 'code'))
+### 2020
+rec20 <- rec20 %>% 
+  rename(code = Tag.ID)
 
-rec5.20$dist <- abs(rec5.20$dist.shore - 1800)
+rec20$year <- year(mdy(rec20$Date))
 
-## 2021
-rec5.21$code <- rec5.21$Tag.ID
-rec5.21$year <- rep('2021', nrow(rec5.21))
+rec20 <- merge(rec20, rec, by = c('year', 'code'))
 
-rec5.21 <- merge(rec5.21, rec, by = c('year', 'code'))
+rec20$dist <- abs(rec20$dist.shore - 1800)
 
-rec5.21$dist <- abs(rec5.21$dist.shore - 2600)
+### 2021
+rec21 <- rec21 %>% 
+  rename(code = Tag.ID)
+
+rec21$year <- year(mdy(rec21$Date))
+
+rec21 <- merge(rec21, rec, by = c('year', 'code'))
+
+rec21$dist <- abs(rec21$dist.shore - 2600)
 
 ## Need a UNIX timestamp ####
-## 2020
-rec5.20$ymd.hms <- paste(rec5.20$Date, rec5.20$Time, sep = ' ')
 
-rec5.20$unix <- as.numeric(mdy_hms(rec5.20$ymd.hms))
+## 2020
+rec20$ymd.hms <- paste(rec20$Date, rec20$Time, sep = ' ')
+
+rec20$unix <- as.numeric(mdy_hms(rec20$ymd.hms))
 
 ## 2021
-rec5.21$ymd.hms <- paste(rec5.21$Date, rec5.21$Time, sep = ' ')
+rec21$ymd.hms <- paste(rec21$Date, rec21$Time, sep = ' ')
 
-rec5.21$unix <- as.numeric(mdy_hms(rec5.21$ymd.hms))
+rec21$unix <- as.numeric(mdy_hms(rec21$ymd.hms))
 
-## For some reason, array 5 in 2021 has some timestamps from 2012
+## Import temp data ####
+temp <- read.csv('data/blueberry_hobo.csv')
 
-rec5.21 <- rec5.21 %>% 
-  filter(unix > 1524457593)
+temp$mdy.hms <- mdy_hm(temp$mdy.hms)
 
-# Analysis ####
-## I want to see what proportion of pings are detected every hour
-## There should be 60 pings an hour, so the proportion would be number detected
-## divided by 60.
+temp$yday <- yday(temp$mdy.hms)
 
-## Stack overflow question ####
+temp2 <- temp %>% 
+  group_by(yday) %>% 
+  summarize(mean = mean(as.numeric(temp)), n = n())
+
+## We can look at this by hour, or by day
+
+## By hour ####
+
 ## 2020 
 
-rec5.20.det <- rec5.20 %>% 
+rec20.hr <- rec20 %>% 
   mutate(hour = 1 + ((unix - min(unix)) %/% 3600)) |>
   mutate(hour = factor(hour, levels = seq(1, max(hour)))) |>
   mutate(code = factor(code)) |>
   group_by(hour, code, .drop = FALSE) |>
   summarize(freq = n(), .groups = "drop")
 
-rec5.20.det$prop <- rec5.20.det$freq/60
+rec20.hr$prop <- rec20.hr$freq/60
+
+rec20.hr <- merge(rec20.hr, subset(rec, year == '2020'), by = 'code')
+rec20.hr$dist <- abs(rec20.hr$dist.shore - 1800)
 
 ## 2021
-rec5.21.det <- rec5.21 %>% 
+rec21.hr <- rec21 %>% 
   mutate(hour = 1 + ((unix - min(unix)) %/% 3600)) |>
   mutate(hour = factor(hour, levels = seq(1, max(hour)))) |>
   mutate(code = factor(code)) |>
   group_by(hour, code, .drop = FALSE) |>
   summarize(freq = n(), .groups = "drop")
 
-rec5.21.det$prop <- rec5.21.det$freq/60
+rec21.hr$prop <- rec21.hr$freq/60
+
+rec21.hr <- merge(rec21.hr, subset(rec, year == '2021'), by = 'code')
+rec21.hr$dist <- abs(rec21.hr$dist.shore - 2600)
+
+## By day ####
+
+## 2020
+rec20.day <- rec20 %>% 
+  mutate(yday = yday(as.POSIXlt(unix, origin = "1970-01-01"))) %>% 
+  mutate(code = factor(code)) |>
+  group_by(yday, code, .drop = FALSE) |>
+  summarize(freq = n(), .groups = "drop")
+
+rec20.day$prop <- rec20.day$freq/1440
+
+rec20.day <- merge(rec20.day, subset(rec, year == '2020'), by = 'code')
+rec20.day$dist <- abs(rec20.day$dist.shore - 1800)
+
+## 2021
+rec21.day <- rec21 %>% 
+  mutate(yday = yday(mdy(Date))) %>% 
+  mutate(code = factor(code)) |>
+  group_by(yday, code, .drop = FALSE) |>
+  summarize(freq = n(), .groups = "drop")
+
+rec21.day$prop <- rec21.day$freq/1440
+
+rec21.day <- merge(rec21.day, subset(rec, year == '2021'), by = 'code')
+rec21.day$dist <- abs(rec21.day$dist.shore - 2600)
+
+# Import temperature data ####
+temp <- read.csv('data/blueberry_hobo.csv')
+temp$yday <- yday(mdy_hm(temp$mdy.hms))
+
+temp2 <- temp %>% 
+  group_by(yday) %>% 
+  summarize(mean = mean(as.numeric(temp)), n = n())
 
 # Visualize #### 
 ## Combine data
 
-rec5 <- rbind(rec5.20, rec5.21)
+rec5 <- rbind(rec20, rec21)
 rec5$Power <- as.numeric(rec5$Power)
 
-ggplot(data = rec5.20, aes(x = dist)) +
+ggplot(data = rec20, aes(x = dist)) +
   geom_histogram() 
 
-ggplot(data = rec5.21, aes(x = dist)) +
+ggplot(data = rec21, aes(x = dist)) +
   geom_histogram()
 
 ggplot(data = rec5, aes(x = dist, y = Power, col = year)) +
@@ -129,40 +178,78 @@ ggplot(data = rec5, aes(x = dist, y = Power, col = year)) +
 ## Proportion of detection by receiver
 
 ### Merge detections with metadata
-rec5.20.prop <- merge(rec5.20.det, subset(rec, year == '2020'), by = 'code')
-rec5.20.prop$dist <- abs(rec5.20.prop$dist.shore - 1800)
+rec20.prop <- merge(rec20.det, subset(rec, year == '2020'), by = 'code')
+rec20.prop$dist <- abs(rec20.prop$dist.shore - 1800)
 
-ggplot(data = rec5.20.prop, aes(x = dist, y = prop, fill = as.factor(dist))) +
+ggplot(data = rec20.prop, aes(x = dist, y = prop, fill = as.factor(dist))) +
   geom_violin()
 
 #### 2021
-rec5.21.prop <- merge(rec5.21.det, subset(rec, year == '2021'), by = 'code')
-rec5.21.prop$dist <- abs(rec5.21.prop$dist.shore - 2600)
+rec21.prop <- merge(rec21.det, subset(rec, year == '2021'), by = 'code')
+rec21.prop$dist <- abs(rec21.prop$dist.shore - 2600)
 
-ggplot(data = rec5.21.prop, aes(x = dist, y = prop, fill = as.factor(dist))) +
+ggplot(data = rec21.prop, aes(x = dist, y = prop, fill = as.factor(dist))) +
   geom_violin()
 
 #### Both years
-rec5.prop <- rbind(rec5.20.prop, rec5.21.prop)
+rec5.prop <- rbind(rec20.prop, rec21.prop)
 
 ggplot(data = rec5.prop, aes(x = dist, y = prop, fill = as.factor(dist))) +
   geom_violin()
 
-ggplot(data = rec5.20.prop, aes(x = as.numeric(hour), y = prop, col = as.factor(dist))) +
+ggplot(data = rec20.prop, aes(x = as.numeric(hour), y = prop, col = as.factor(dist))) +
   geom_line() +
   geom_smooth() +
   facet_wrap(~as.factor(dist))
 
-ggplot(data = rec5.20.prop, aes(x = prop)) +
+ggplot(data = rec20.prop, aes(x = prop)) +
   geom_histogram() +
   facet_wrap(~as.factor(dist))
 
-ggplot(data = rec5.21.prop, aes(x = as.numeric(hour), y = prop, col = as.factor(dist))) +
+ggplot(data = rec21.prop, aes(x = as.numeric(hour), y = prop, col = as.factor(dist))) +
   geom_line() +
   geom_smooth() +
   facet_wrap(~as.factor(dist))
 
 ggplot(data = rec5.prop, aes(x = as.numeric(hour), y = prop, col = as.factor(dist))) +
+  geom_line() +
+  geom_smooth() +
+  facet_wrap(~as.factor(dist))
+
+# Scrap ####
+
+## 2020
+rec20.det2 <- rec20 %>% 
+  mutate(yday = yday(as.POSIXlt(unix, origin = "1970-01-01"))) %>% 
+  mutate(code = factor(code)) |>
+  group_by(yday, code, .drop = FALSE) |>
+  summarize(freq = n(), .groups = "drop")
+
+rec20.det2$prop <- rec20.det2$freq/1440
+
+rec20.det2 <- merge(rec20.det2, temp2, by = 'yday')
+
+rec20.det2 <- merge(rec20.det2, subset(rec, year == '2020'), by = 'code')
+rec20.det2$dist <- abs(rec20.det2$dist.shore - 1800)
+
+ggplot(data = rec20.det2, aes(x = mean, y = prop)) +
+  geom_point() +
+  geom_smooth() +
+  facet_wrap(~as.factor(dist))
+
+## 2021
+rec21.det2 <- rec21 %>% 
+  mutate(yday = yday(mdy(Date))) %>% 
+  mutate(code = factor(code)) |>
+  group_by(yday, code, .drop = FALSE) |>
+  summarize(freq = n(), .groups = "drop")
+
+rec21.det2$prop <- rec21.det2$freq/1440
+
+rec21.det2 <- merge(rec21.det2, subset(rec, year == '2021'), by = 'code')
+rec21.det2$dist <- abs(rec21.det2$dist.shore - 2600)
+
+ggplot(data = rec21.det2, aes(x = yday, y = prop)) +
   geom_line() +
   geom_smooth() +
   facet_wrap(~as.factor(dist))
