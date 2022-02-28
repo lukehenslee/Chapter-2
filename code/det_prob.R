@@ -19,7 +19,7 @@ library(magrittr)
 
 # Set working directory ####
 setwd("C:/Users/lukeh/Desktop/School/Thesis/Chapter_2")
-setwd("C:/Users/lhhenslee/Desktop/Luke/School/Thesis/Chapter 2/Chapter-2")
+setwd("C:/Users/lukeh/Desktop/School/GIT repos/Chapter-2")
 
 # Import data ####
 ## Receiver metadata
@@ -108,7 +108,17 @@ rec20.hr <- rec20 %>%
   group_by(hour, code, .drop = FALSE) |>
   summarize(freq = n(), .groups = "drop")
 
+rec20.hr <- rec20 %>% 
+  mutate(hour = 1 + ((unix - min(unix)) %/% 3600)) |>
+  mutate(unix = min(unix) + (hour * 3600)) |>
+  mutate(hour = factor(hour, levels = seq(1, max(hour)))) |>
+  mutate(code = factor(code)) |>
+  group_by(hour, code, .drop = FALSE) |>
+  summarize(freq = n(), .groups = "drop")
+
 rec20.hr$prop <- rec20.hr$freq/60
+rec20.hr$unix <- min(rec20$unix) + (as.numeric(rec20.hr$hour) * 3600)
+rec20.hr$datetime <- as_datetime((rec20.hr$unix))
 
 rec20.hr <- merge(rec20.hr, subset(rec, year == '2020'), by = 'code')
 rec20.hr$dist <- abs(rec20.hr$dist.shore - 1800)
