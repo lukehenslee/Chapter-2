@@ -18,8 +18,8 @@ library(openxlsx)
 library(magrittr)
 
 # Set working directory ####
-setwd("C:/Users/lukeh/Desktop/School/Thesis/Chapter_2")
-setwd("C:/Users/lukeh/Desktop/School/GIT repos/Chapter-2")
+setwd("C:/Users/lhhenslee/Desktop/Luke/School/Thesis/Chapter 2/Chapter-2") # Work
+setwd("C:/Users/lukeh/Desktop/School/GIT repos/Chapter-2") # School
 
 # Import data ####
 ## Receiver metadata
@@ -89,8 +89,13 @@ temp <- read.csv('data/blueberry_hobo.csv')
 
 temp$mdy.hms <- mdy_hm(temp$mdy.hms)
 
+temp$year <- year(temp$mdy.hms)
+
 temp$yday <- yday(temp$mdy.hms)
 
+temp$hour <- hour(temp$mdy.hms)
+
+# Daily average temperature
 temp2 <- temp %>% 
   group_by(yday) %>% 
   summarize(mean = mean(as.numeric(temp)), n = n())
@@ -102,39 +107,43 @@ temp2 <- temp %>%
 ## 2020 
 
 rec20.hr <- rec20 %>% 
-  mutate(hour = 1 + ((unix - min(unix)) %/% 3600)) |>
-  mutate(hour = factor(hour, levels = seq(1, max(hour)))) |>
+  mutate(hour.seq = 1 + ((unix - min(unix)) %/% 3600)) |>
+  mutate(hour.seq = factor(hour.seq, levels = seq(1, max(hour.seq)))) |>
   mutate(code = factor(code)) |>
-  group_by(hour, code, .drop = FALSE) |>
+  group_by(hour.seq, code, .drop = FALSE) |>
   summarize(freq = n(), .groups = "drop")
 
-rec20.hr <- rec20 %>% 
-  mutate(hour = 1 + ((unix - min(unix)) %/% 3600)) |>
-  mutate(unix = min(unix) + (hour * 3600)) |>
-  mutate(hour = factor(hour, levels = seq(1, max(hour)))) |>
-  mutate(code = factor(code)) |>
-  group_by(hour, code, .drop = FALSE) |>
-  summarize(freq = n(), .groups = "drop")
+rec20.hr$prop <- rec20.hr$freq/60 # Proportion of beacons detected
 
-rec20.hr$prop <- rec20.hr$freq/60
-rec20.hr$unix <- min(rec20$unix) + (as.numeric(rec20.hr$hour) * 3600)
-rec20.hr$datetime <- as_datetime((rec20.hr$unix))
+rec20.hr$unix <- min(rec20$unix) + (as.numeric(rec20.hr$hour.seq) * 3600) # Unix timestamp
+rec20.hr$datetime <- as_datetime((rec20.hr$unix)) # Datetime
+rec20.hr$yday <- yday(rec20.hr$datetime) # yday
+rec20.hr$hour <- hour(rec20.hr$datetime)
 
 rec20.hr <- merge(rec20.hr, subset(rec, year == '2020'), by = 'code')
 rec20.hr$dist <- abs(rec20.hr$dist.shore - 1800)
 
+rec20.hr <- merge(rec20.hr, temp, by = c('year', 'yday', 'hour')) # Temp
+
 ## 2021
 rec21.hr <- rec21 %>% 
-  mutate(hour = 1 + ((unix - min(unix)) %/% 3600)) |>
-  mutate(hour = factor(hour, levels = seq(1, max(hour)))) |>
+  mutate(hour.seq = 1 + ((unix - min(unix)) %/% 3600)) |>
+  mutate(hour.seq = factor(hour.seq, levels = seq(1, max(hour.seq)))) |>
   mutate(code = factor(code)) |>
-  group_by(hour, code, .drop = FALSE) |>
+  group_by(hour.seq, code, .drop = FALSE) |>
   summarize(freq = n(), .groups = "drop")
 
-rec21.hr$prop <- rec21.hr$freq/60
+rec21.hr$prop <- rec21.hr$freq/60 # Proportion of beacons detected
+
+rec21.hr$unix <- min(rec21$unix) + (as.numeric(rec21.hr$hour.seq) * 3600) # Unix timestamp
+rec21.hr$datetime <- as_datetime((rec21.hr$unix)) # Datetime
+rec21.hr$yday <- yday(rec21.hr$datetime)
+rec21.hr$hour <- hour(rec21.hr$datetime)
 
 rec21.hr <- merge(rec21.hr, subset(rec, year == '2021'), by = 'code')
 rec21.hr$dist <- abs(rec21.hr$dist.shore - 2600)
+
+rec21.hr <- merge(rec21.hr, temp, by = c('year', 'yday', 'hour')) # Temp
 
 ## By day ####
 
@@ -145,7 +154,9 @@ rec20.day <- rec20 %>%
   group_by(yday, code, .drop = FALSE) |>
   summarize(freq = n(), .groups = "drop")
 
-rec20.day$prop <- rec20.day$freq/1440
+rec20.day$prop <- rec20.day$freq/1440 # Daily proportion of beacons detected
+
+rec20.day$mdy <- as.Date(rec20.day$yday, origin = '2020-01-01') # Add mdy
 
 rec20.day <- merge(rec20.day, subset(rec, year == '2020'), by = 'code')
 rec20.day$dist <- abs(rec20.day$dist.shore - 1800)
@@ -158,6 +169,8 @@ rec21.day <- rec21 %>%
   summarize(freq = n(), .groups = "drop")
 
 rec21.day$prop <- rec21.day$freq/1440
+
+rec21.day$mdy <- as.Date(rec21.day$yday, origin = '2021-01-01') # Add mdy
 
 rec21.day <- merge(rec21.day, subset(rec, year == '2021'), by = 'code')
 rec21.day$dist <- abs(rec21.day$dist.shore - 2600)
