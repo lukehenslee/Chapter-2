@@ -16,6 +16,7 @@ library(data.table)
 library(lubridate)
 library(openxlsx)
 library(magrittr)
+library(lubridate)
 
 # Set working directory ####
 setwd("C:/Users/lhhenslee/Desktop/Luke/School/Thesis/Chapter 2/Chapter-2") # Work
@@ -84,21 +85,6 @@ rec21$ymd.hms <- paste(rec21$Date, rec21$Time, sep = ' ')
 
 rec21$unix <- as.numeric(mdy_hms(rec21$ymd.hms))
 
-## Import temp data ####
-temp <- read.csv('data/blueberry_hobo.csv')
-
-temp$mdy.hms <- mdy_hm(temp$mdy.hms)
-
-temp$year <- year(temp$mdy.hms)
-
-temp$yday <- yday(temp$mdy.hms)
-
-temp$hour <- hour(temp$mdy.hms)
-
-# Daily average temperature
-temp2 <- temp %>% 
-  group_by(yday) %>% 
-  summarize(mean = mean(as.numeric(temp)), n = n())
 
 ## We can look at this by hour, or by day
 
@@ -121,7 +107,9 @@ rec20.hr$yday <- yday(rec20.hr$datetime) # yday
 rec20.hr$hour <- hour(rec20.hr$datetime)
 
 rec20.hr <- merge(rec20.hr, subset(rec, year == '2020'), by = 'code')
-rec20.hr$dist <- abs(rec20.hr$dist.shore - 1800)
+rec20.hr$Distance <- paste(abs(rec20.hr$dist.shore - 1800), 'm')
+rec20.hr$Distance <- factor(rec20.hr$Distance, levels = c('300 m', '600 m', '900 m',
+                                                  '1200 m', '1500 m'))
 
 rec20.hr <- merge(rec20.hr, temp, by = c('year', 'yday', 'hour')) # Temp
 
@@ -141,9 +129,9 @@ rec21.hr$yday <- yday(rec21.hr$datetime)
 rec21.hr$hour <- hour(rec21.hr$datetime)
 
 rec21.hr <- merge(rec21.hr, subset(rec, year == '2021'), by = 'code')
-rec21.hr$dist <- abs(rec21.hr$dist.shore - 2600)
-
-rec21.hr <- merge(rec21.hr, temp, by = c('year', 'yday', 'hour')) # Temp
+rec21.hr$Distance <- paste(abs(rec21.hr$dist.shore - 2600), 'm')
+rec21.hr$Distance <- factor(rec21.hr$Distance, levels = c('500 m', '1000 m', '1500 m',
+                                                          '2000 m', '2300 m'))
 
 ## By day ####
 
@@ -159,7 +147,9 @@ rec20.day$prop <- rec20.day$freq/1440 # Daily proportion of beacons detected
 rec20.day$mdy <- as.Date(rec20.day$yday, origin = '2020-01-01') # Add mdy
 
 rec20.day <- merge(rec20.day, subset(rec, year == '2020'), by = 'code')
-rec20.day$dist <- abs(rec20.day$dist.shore - 1800)
+rec20.day$Distance <- paste(abs(rec20.day$dist.shore - 1800), 'm')
+rec20.day$Distance <- factor(rec20.day$Distance, levels = c('300 m', '600 m', '900 m',
+                                                          '1200 m', '1500 m'))
 
 ## 2021
 rec21.day <- rec21 %>% 
@@ -173,10 +163,12 @@ rec21.day$prop <- rec21.day$freq/1440
 rec21.day$mdy <- as.Date(rec21.day$yday, origin = '2021-01-01') # Add mdy
 
 rec21.day <- merge(rec21.day, subset(rec, year == '2021'), by = 'code')
-rec21.day$dist <- abs(rec21.day$dist.shore - 2600)
+rec21.day$Distance <- paste(abs(rec21.day$dist.shore - 2600), 'm')
+rec21.day$Distance <- factor(rec21.day$Distance, levels = c('500 m', '1000 m', '1500 m',
+                                                          '2000 m', '2300 m'))
 
 # Import temperature data ####
-temp <- read.csv('data/blueberry_hobo.csv')
+temp <- read.csv('data/blueberry_hobo_2020.csv')
 temp$yday <- yday(mdy_hm(temp$mdy.hms))
 
 temp2 <- temp %>% 
@@ -184,60 +176,206 @@ temp2 <- temp %>%
   summarize(mean = mean(as.numeric(temp)), n = n())
 
 # Visualize #### 
-## Combine data
 
-rec5 <- rbind(rec20, rec21)
-rec5$Power <- as.numeric(rec5$Power)
+library(RColorBrewer)
+library(ggpubr)
+library(extrafont)
+library(visreg)
+loadfonts(device = 'win')
 
-ggplot(data = rec20, aes(x = dist)) +
-  geom_histogram() 
+## Proportion of detection by receiver ####
+my.pal <- c("#E78AC3", "#66C2A5", "#FC8D62", "#8DA0CB", "#A6D854")
+### By hour ####
+  #### 2020
+rec20.hr.plot <- ggplot(data = rec20.hr, aes(x = as.numeric(hour.seq), y = prop)) +
+  geom_col(position = 'dodge', aes(fill = Distance)) +
+  geom_smooth() +
+  facet_wrap(~Distance, scales = 'free') +
+  xlab('Date') +
+  ylab('Detection proportion') +
+  scale_fill_manual(values = my.pal) +
+  scale_x_continuous(limits = c(0,1248), expand = c(0,0), breaks = seq(0,1200,400),
+                     labels = c('Jul 15', 'Jul 31', 'Aug 17', 'Sept 3')) +
+  scale_y_continuous(limits = c(0, 1), expand = c(0,0)) +
+  theme_classic() +
+  theme (axis.title.y = element_text(size = 14, margin = margin(t = 0, r = 10, b = 0, l = 0), colour = "black"),
+         axis.title.x = element_text(size = 14, margin = margin(t = 10, r = 0, b = 0, l = 0), colour = "black"),
+         panel.spacing = unit(1, 'lines'),
+         #set the font type
+         text = element_text(),
+         #modify plot title, the B in this case
+         plot.title = element_text(face = "bold"),
+         #position the legend on the figure
+         legend.position = c(0.8, 0.15),
+         legend.title = element_text(size = 14),
+         #adjust size of text for legend
+         legend.text = element_text(size = 14),
+         #margin for the plot
+         plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+         strip.background = element_blank(),
+         strip.text = element_blank(),
+         #set size of the tick marks for y-axis
+         axis.ticks.y = element_line(size = 0.5),
+         #set size of the tick marks for x-axis
+         axis.ticks.x = element_line(size = 0.5),
+         #adjust length of the tick marks
+         axis.ticks.length = unit(0.2,"cm"),
+         #set size and location of the tick labels for the y axis
+         axis.text.y = element_text(colour = "black", size = 10, angle = 0, vjust = 0.5, hjust = 1,
+                                    margin = margin(t = 0, r = 5, b = 0, l = 0)),
+         #set size and location of the tick labels for the x axis
+         axis.text.x = element_text(colour = "black", size = 10, angle = 0, vjust = 0, hjust = 0.5,
+                                    margin = margin(t = 5, r = 0, b = 0, l = 0)),
+         #set the axis size, color, and end shape
+         axis.line = element_line(colour = "black", size = 0.5, lineend = "square"))
 
-ggplot(data = rec21, aes(x = dist)) +
-  geom_histogram()
+rec20.hr.plot
 
-ggplot(data = rec5, aes(x = dist, y = Power, col = year)) +
-  geom_point(position = position_jitter(width = 50, height = 1))
+ggsave(rec20.hr.plot, file = "figs/rec20.hr.png", width = 20, height = 12, units = "cm", dpi = 300)
 
-## Proportion of detection by receiver
+  #### 2021
+rec21.hr.plot <- ggplot(data = rec21.hr, aes(x = as.numeric(hour.seq), y = prop)) +
+  geom_col(position = 'dodge', aes(fill = Distance)) +
+  geom_smooth() +
+  facet_wrap(~Distance, scales = 'free') +
+  xlab('Date') +
+  ylab('Detection proportion') +
+  scale_fill_manual(values = my.pal) +
+  scale_x_continuous(limits = c(0,1628), expand = c(0,0), breaks = seq(0,1600,400),
+                     labels = c('Jun 26', 'Jul 12', 'Jul 29', 'Aug 15', 'Aug 31')) +
+  scale_y_continuous(limits = c(0, 1), expand = c(0,0)) +
+  theme_classic() +
+  theme (axis.title.y = element_text(size = 14, margin = margin(t = 0, r = 10, b = 0, l = 0), colour = "black"),
+         axis.title.x = element_text(size = 14, margin = margin(t = 10, r = 0, b = 0, l = 0), colour = "black"),
+         panel.spacing = unit(1, 'lines'),
+         #set the font type
+         text = element_text(),
+         #modify plot title, the B in this case
+         plot.title = element_text(face = "bold"),
+         #position the legend on the figure
+         legend.position = c(0.8, 0.15),
+         legend.title = element_text(size = 14),
+         #adjust size of text for legend
+         legend.text = element_text(size = 14),
+         #margin for the plot
+         plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+         strip.background = element_blank(),
+         strip.text = element_blank(),
+         #set size of the tick marks for y-axis
+         axis.ticks.y = element_line(size = 0.5),
+         #set size of the tick marks for x-axis
+         axis.ticks.x = element_line(size = 0.5),
+         #adjust length of the tick marks
+         axis.ticks.length = unit(0.2,"cm"),
+         #set size and location of the tick labels for the y axis
+         axis.text.y = element_text(colour = "black", size = 10, angle = 0, vjust = 0.5, hjust = 1,
+                                    margin = margin(t = 0, r = 5, b = 0, l = 0)),
+         #set size and location of the tick labels for the x axis
+         axis.text.x = element_text(colour = "black", size = 10, angle = 0, vjust = 0, hjust = 0.5,
+                                    margin = margin(t = 5, r = 0, b = 0, l = 0)),
+         #set the axis size, color, and end shape
+         axis.line = element_line(colour = "black", size = 0.5, lineend = "square"))
 
-### Merge detections with metadata
-rec20.prop <- merge(rec20.det, subset(rec, year == '2020'), by = 'code')
-rec20.prop$dist <- abs(rec20.prop$dist.shore - 1800)
+rec21.hr.plot
 
-ggplot(data = rec20.prop, aes(x = dist, y = prop, fill = as.factor(dist))) +
-  geom_violin()
+ggsave(rec21.hr.plot, file = "figs/rec21.hr.png", width = 20, height = 12, units = "cm", dpi = 300)
+
+### By day ####
+
+#### 2020
+rec20.day.plot <- ggplot(data = rec20.day, aes(x = yday, y = prop)) +
+  geom_col(position = 'dodge', aes(fill = Distance)) +
+  geom_smooth() +
+  facet_wrap(~Distance, scales = 'free') +
+  xlab('Date') +
+  ylab('Detection proportion') +
+  scale_fill_manual(values = my.pal) +
+  scale_x_continuous(limits = c(196, 248), expand = c(0,0), breaks = seq(200,240,10),
+                     labels = c('Jul 19', 'Jul 29', 'Aug 8', 'Aug 18', 'Aug 28')) +
+  scale_y_continuous(limits = c(0, 1), expand = c(0,0)) +
+  theme_classic() +
+  theme (axis.title.y = element_text(size = 14, margin = margin(t = 0, r = 10, b = 0, l = 0), colour = "black"),
+         axis.title.x = element_text(size = 14, margin = margin(t = 10, r = 0, b = 0, l = 0), colour = "black"),
+         panel.spacing = unit(1, 'lines'),
+         #set the font type
+         text = element_text(),
+         #modify plot title, the B in this case
+         plot.title = element_text(face = "bold"),
+         #position the legend on the figure
+         legend.position = c(0.8, 0.15),
+         legend.title = element_text(size = 14),
+         #adjust size of text for legend
+         legend.text = element_text(size = 14),
+         #margin for the plot
+         plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+         strip.background = element_blank(),
+         strip.text = element_blank(),
+         #set size of the tick marks for y-axis
+         axis.ticks.y = element_line(size = 0.5),
+         #set size of the tick marks for x-axis
+         axis.ticks.x = element_line(size = 0.5),
+         #adjust length of the tick marks
+         axis.ticks.length = unit(0.2,"cm"),
+         #set size and location of the tick labels for the y axis
+         axis.text.y = element_text(colour = "black", size = 10, angle = 0, vjust = 0.5, hjust = 1,
+                                    margin = margin(t = 0, r = 5, b = 0, l = 0)),
+         #set size and location of the tick labels for the x axis
+         axis.text.x = element_text(colour = "black", size = 10, angle = 0, vjust = 0, hjust = 0.5,
+                                    margin = margin(t = 5, r = 0, b = 0, l = 0)),
+         #set the axis size, color, and end shape
+         axis.line = element_line(colour = "black", size = 0.5, lineend = "square"))
+
+rec20.day.plot
+
+ggsave(rec20.day.plot, file = "figs/rec20.day.png", width = 20, height = 12, units = "cm", dpi = 300)
 
 #### 2021
-rec21.prop <- merge(rec21.det, subset(rec, year == '2021'), by = 'code')
-rec21.prop$dist <- abs(rec21.prop$dist.shore - 2600)
-
-ggplot(data = rec21.prop, aes(x = dist, y = prop, fill = as.factor(dist))) +
-  geom_violin()
-
-#### Both years
-rec5.prop <- rbind(rec20.prop, rec21.prop)
-
-ggplot(data = rec5.prop, aes(x = dist, y = prop, fill = as.factor(dist))) +
-  geom_violin()
-
-ggplot(data = rec20.prop, aes(x = as.numeric(hour), y = prop, col = as.factor(dist))) +
-  geom_line() +
+rec21.day.plot <- ggplot(data = rec21.day, aes(x = yday, y = prop)) +
+  geom_col(position = 'dodge', aes(fill = Distance)) +
   geom_smooth() +
-  facet_wrap(~as.factor(dist))
+  facet_wrap(~Distance, scales = 'free') +
+  xlab('Date') +
+  ylab('Detection proportion') +
+  scale_fill_manual(values = my.pal) +
+  scale_x_continuous(limits = c(177, 244), expand = c(0,0), breaks = seq(180,240,10),
+                     labels = c('Jun 30', 'Jul 10', 'Jul 20', 'Jul 30', 'Aug 9', 'Aug 19',
+                                'Aug 29')) +
+  scale_y_continuous(limits = c(0, 1), expand = c(0,0)) +
+  theme_classic() +
+  theme (axis.title.y = element_text(size = 14, margin = margin(t = 0, r = 10, b = 0, l = 0), colour = "black"),
+         axis.title.x = element_text(size = 14, margin = margin(t = 10, r = 0, b = 0, l = 0), colour = "black"),
+         panel.spacing = unit(1, 'lines'),
+         #set the font type
+         text = element_text(),
+         #modify plot title, the B in this case
+         plot.title = element_text(face = "bold"),
+         #position the legend on the figure
+         legend.position = c(0.8, 0.15),
+         legend.title = element_text(size = 14),
+         #adjust size of text for legend
+         legend.text = element_text(size = 14),
+         #margin for the plot
+         plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+         strip.background = element_blank(),
+         strip.text = element_blank(),
+         #set size of the tick marks for y-axis
+         axis.ticks.y = element_line(size = 0.5),
+         #set size of the tick marks for x-axis
+         axis.ticks.x = element_line(size = 0.5),
+         #adjust length of the tick marks
+         axis.ticks.length = unit(0.2,"cm"),
+         #set size and location of the tick labels for the y axis
+         axis.text.y = element_text(colour = "black", size = 10, angle = 0, vjust = 0.5, hjust = 1,
+                                    margin = margin(t = 0, r = 5, b = 0, l = 0)),
+         #set size and location of the tick labels for the x axis
+         axis.text.x = element_text(colour = "black", size = 10, angle = 0, vjust = 0, hjust = 0.5,
+                                    margin = margin(t = 5, r = 0, b = 0, l = 0)),
+         #set the axis size, color, and end shape
+         axis.line = element_line(colour = "black", size = 0.5, lineend = "square"))
 
-ggplot(data = rec20.prop, aes(x = prop)) +
-  geom_histogram() +
-  facet_wrap(~as.factor(dist))
+rec21.day.plot
 
-ggplot(data = rec21.prop, aes(x = as.numeric(hour), y = prop, col = as.factor(dist))) +
-  geom_line() +
-  geom_smooth() +
-  facet_wrap(~as.factor(dist))
-
-ggplot(data = rec5.prop, aes(x = as.numeric(hour), y = prop, col = as.factor(dist))) +
-  geom_line() +
-  geom_smooth() +
-  facet_wrap(~as.factor(dist))
+ggsave(rec21.day.plot, file = "figs/rec21.day.png", width = 20, height = 12, units = "cm", dpi = 300)
 
 # Scrap ####
 
