@@ -142,7 +142,7 @@ r3.group <- r3 %>%
   summarize(across(prop, mean))
 
 # Visualize ####
-
+my.pal <- c("#E78AC3", "#66C2A5", "#FC8D62", "#8DA0CB", "#A6D854")
 ## Array 1 ####
 ggplot(data = r1.group, aes(x = as.numeric(hour.seq), y = prop)) +
   geom_col(position = 'dodge') +
@@ -170,6 +170,19 @@ r1.plot <- ggplot(data = r1.group, aes(x = as.numeric(hour.seq), y = prop)) +
 
 ggsave(r1.plot, file = "figs/r1_2020.png", width = 23, height = 15, units = "cm", dpi = 300)
 
+ggplot(data = r1.group, aes(x = as.numeric(hour.seq), y = prop, col = as.factor(dist))) +
+  geom_smooth() +
+  xlab('Day of year') +
+  ylab('Detection proportion') +
+  scale_color_manual(values = my.pal) +
+  scale_x_continuous(breaks = c(0, 300, 600, 900, 1200),
+                     labels = c(r7.group[first(which.min(as.numeric(r7.group$hour.seq))), 2],
+                                r7.group[first(which(as.numeric(r7.group$hour.seq) == 300)), 2],
+                                r7.group[first(which(as.numeric(r7.group$hour.seq) == 600)), 2],
+                                r7.group[first(which(as.numeric(r7.group$hour.seq) == 900)), 2],
+                                r7.group[first(which.max(as.numeric(r7.group$hour.seq))), 2])) +
+  scale_y_continuous(limits = c(0,1), expand = c(0,0)) +
+  theme_bw()
 
 ## Array 2 ####
 ggplot(data = r2.group, aes(x = as.numeric(hour.seq), y = prop)) +
@@ -198,7 +211,17 @@ r2.plot <- ggplot(data = r2.group, aes(x = as.numeric(hour.seq), y = prop)) +
 
 ggsave(r2.plot, file = "figs/r2_2020.png", width = 23, height = 15, units = "cm", dpi = 300)
 
-
+ggplot(data = r2.group, aes(x = as.numeric(hour.seq), y = prop, col = as.factor(dist))) +
+  geom_smooth() +
+  xlab('Day of year') +
+  ylab('Detection proportion') +
+  scale_x_continuous(breaks = c(0, 300, 600, 900, 1200),
+                     labels = c(r7.group[first(which.min(as.numeric(r7.group$hour.seq))), 2],
+                                r7.group[first(which(as.numeric(r7.group$hour.seq) == 300)), 2],
+                                r7.group[first(which(as.numeric(r7.group$hour.seq) == 600)), 2],
+                                r7.group[first(which(as.numeric(r7.group$hour.seq) == 900)), 2],
+                                r7.group[first(which.max(as.numeric(r7.group$hour.seq))), 2])) +
+  scale_y_continuous(limits = c(0,1), expand = c(0,0)) 
 ## Array 3 ####
 ggplot(data = r3.group, aes(x = as.numeric(hour.seq), y = prop)) +
   geom_col(position = 'dodge') +
@@ -226,6 +249,17 @@ r3.plot <- ggplot(data = r3.group, aes(x = as.numeric(hour.seq), y = prop)) +
 
 ggsave(r3.plot, file = "figs/r3_2020.png", width = 23, height = 15, units = "cm", dpi = 300)
 
+ggplot(data = r3.group, aes(x = as.numeric(hour.seq), y = prop, col = as.factor(dist))) +
+  geom_smooth() +
+  xlab('Day of year') +
+  ylab('Detection proportion') +
+  scale_x_continuous(breaks = c(0, 300, 600, 900, 1200),
+                     labels = c(r7.group[first(which.min(as.numeric(r7.group$hour.seq))), 2],
+                                r7.group[first(which(as.numeric(r7.group$hour.seq) == 300)), 2],
+                                r7.group[first(which(as.numeric(r7.group$hour.seq) == 600)), 2],
+                                r7.group[first(which(as.numeric(r7.group$hour.seq) == 900)), 2],
+                                r7.group[first(which.max(as.numeric(r7.group$hour.seq))), 2])) +
+  scale_y_continuous(limits = c(0,1), expand = c(0,0)) 
 
 # Array 4 ####
 r4.1 <- read.csv('Q:/RESEARCH/Tagging/Github/data/detections/4.1.csv', skip = c(47),
@@ -291,6 +325,17 @@ r4.plot <- ggplot(data = r4.group, aes(x = as.numeric(hour.seq), y = prop)) +
 
 ggsave(r4.plot, file = "figs/r4_2020.png", width = 23, height = 15, units = "cm", dpi = 300)
 
+ggplot(data = r4.group, aes(x = as.numeric(hour.seq), y = prop, col = as.factor(dist))) +
+  geom_smooth() +
+  xlab('Day of year') +
+  ylab('Detection proportion') +
+  scale_x_continuous(breaks = c(0, 300, 600, 900, 1200),
+                     labels = c(r7.group[first(which.min(as.numeric(r7.group$hour.seq))), 2],
+                                r7.group[first(which(as.numeric(r7.group$hour.seq) == 300)), 2],
+                                r7.group[first(which(as.numeric(r7.group$hour.seq) == 600)), 2],
+                                r7.group[first(which(as.numeric(r7.group$hour.seq) == 900)), 2],
+                                r7.group[first(which.max(as.numeric(r7.group$hour.seq))), 2])) +
+  scale_y_continuous(limits = c(0,1), expand = c(0,0)) 
 
 # Array 5 ####
 r5.1 <- read.csv('Q:/RESEARCH/Tagging/Github/data/detections/5.1.csv', skip = c(47),
@@ -367,8 +412,7 @@ ggplot(data = r5.group, aes(x = as.numeric(hour.seq), y = prop, col = as.factor(
                                 r7.group[first(which(as.numeric(r7.group$hour.seq) == 600)), 2],
                                 r7.group[first(which(as.numeric(r7.group$hour.seq) == 900)), 2],
                                 r7.group[first(which.max(as.numeric(r7.group$hour.seq))), 2])) +
-  scale_y_continuous(limits = c(0,1), expand = c(0,0)) +
-  theme(panel.spacing.x = unit(1, "lines"))
+  scale_y_continuous(limits = c(0,1), expand = c(0,0)) 
 
 # Array 6 ####
 r6.1 <- read.csv('Q:/RESEARCH/Tagging/Github/data/detections/6.1.csv', skip = c(47),
