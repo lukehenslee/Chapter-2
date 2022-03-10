@@ -45,8 +45,7 @@ det <- function(data) {
   r4 <- merge(r3, rec, by = 'Tag.ID')
   # Distance from other receivers
   r4$dist <- abs(r4$dist.shore - 
-                   rec[which(rec[,1] == r2[1,5] & 
-                               year(mdy(rec[,3])) == year(mdy(r2[1,1]))),5])
+                   rec[which(rec[,1] == r2[1,5]),5])
   r4$receiver <- rep(r2[1,5], times = nrow(r4))
   return(r4)
 }
