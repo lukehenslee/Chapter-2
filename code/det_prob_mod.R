@@ -24,7 +24,9 @@ r21 <- read.csv('data/r21_array.csv')
 
 # Manipulate data ####
 r <- rbind(r20[,c(2:8)], r21[,c(2:8)])
-r$year <- as.factor(year(r$date.datetime.))
+
+r <- read.csv('data/env/r_env.csv')
+r$year <- as.factor(year(mdy((r$mdy))))
 
 ## Round freq
 r$freq <- as.integer(round(r$freq, 0))
@@ -49,9 +51,10 @@ visreg(global, xvar = 'dist', scale = 'response')
 # Try to assign 1 and 0
 r$bi <- as.integer(round(r$prop), 0)
 
-summary(global <- glm(bi ~ dist + yday + year + hour + Array,
+summary(global <- glm(bi ~ dist + yday + year + hour + Array + u + v + sea_level + temp + rnorm(n = nrow(r)),
                       family = binomial,
                       data = r))
+
 visreg(global, xvar = 'Array', by = 'year', scale = 'response', gg = T,
        print.cond = T)
 visreg(global, xvar = 'yday', scale = 'response', gg = T, print.cond = T)

@@ -1,4 +1,7 @@
 
+
+#Unalakleet arrays: 'Blueberry Creek, Point Creek, and Black Point'
+
 # Positive u wind is from the west
 # Positive v wind is from the south
 
@@ -82,3 +85,123 @@ blkpnt <- read.csv('blackpnt.csv')
 unk <- rbind(unk.20, point.20, unk.21, blkpnt)
 
 write.csv(unk, 'unk.env.csv')
+
+# Junction Creek and Cape Denbeigh ####
+
+skk.env<- subset(r, Array %in% c('Junction Creek', 'Cape Denbeigh'))
+skk.env$mdy <- (as_date(skk.env$date.datetime.))
+skk.env.20 <- subset(skk.env, year(date.datetime.) == '2020')
+skk.env.21 <- subset(skk.env, year(date.datetime.) == '2021')
+
+## Temp - Denbeigh 20 and 21, Junction 20
+skk.den <- subset(skk.env, Array == 'Cape Denbeigh')
+
+den20 <- read.csv('temp/Cape_Denbeigh_2020.csv')
+den20$mdy.hms <- mdy_hm(den20$ï..date)
+den20$mdy <- as_date(den20$mdy.hms)
+den20$hour <- hour(den20$mdy.hms) 
+
+den21 <- read.csv('temp/Cape_Denbeigh_2021.csv')
+den21$mdy.hms <- mdy_hm(den21$ï..date)
+den21$mdy <- as_date(den21$mdy.hms)
+den21$hour <- hour(den21$mdy.hms)
+
+den <- rbind(den21, den20)
+
+den <- den %>% 
+  group_by(mdy, hour) %>% 
+  slice(1)
+skk.den <- merge(skk.den, den, by = c('mdy', 'hour'))
+skk.jun.21 <- subset(skk.env.21, Array == 'Junction Creek')
+skk.jun.21 <- merge(skk.jun.21, den, by = c('mdy', 'hour'))
+
+skk.jun <- subset(skk.env.20, Array == 'Junction Creek')
+jun20 <- read.csv('temp/Junction_Creek_2020.csv')
+jun20$mdy.hms <- mdy_hm(jun20$ï..date)
+jun20$mdy <- as_date(jun20$mdy.hms)
+jun20$hour <- hour(jun20$mdy.hms)
+
+skk.jun <- merge(skk.jun, jun20, by = c('mdy', 'hour'))
+
+skk.env2 <- rbind(skk.jun, skk.jun.21, skk.den)
+
+write.csv(skk.env2, 'skk.env.csv')
+
+
+## Wind - SKK 2020, SKK 2021
+wind.skk.20 <- read.csv('wind/SKK_wind_2020.csv')
+wind.skk.21 <- read.csv('wind/SKK_wind_2021.csv')
+
+wind.skk <- rbind(wind.skk.20, wind.skk.21)
+wind.skk$ymd <- lubridate::as_date(mdy((wind.skk$Date)))
+wind.skk$mdy <- wind.skk$Date
+wind.skk$hour <- hour(hm(wind.skk$Time))
+wind.skk$md <- abs(as.numeric(wind.skk$Wind.Direction..deg.) - 270)
+wind.skk$u <- (as.numeric(wind.skk$Wind.Spd..mph.)*0.44704) * cos(wind.skk$md)
+wind.skk$v <- (as.numeric(wind.skk$Wind.Spd..mph.)*0.44704) * sin(wind.skk$md)
+
+skk.env3 <- read.csv('skk.env.csv')
+
+skk.env4 <- merge(skk.env3, wind.skk, by = c('mdy', 'hour'))
+
+## Tides - skk tide predictions
+skk.tides <- read.csv('tides/skk_tides.csv')
+
+skk.tides$mdy.hms <- lubridate::ymd_hms(skk.tides$time, tz = 'US/Alaska')
+skk.tides$ymd <- as_date(skk.tides$mdy.hms)
+skk.tides$hour <- hour(skk.tides$mdy.hms)
+
+skk.tides2<- skk.tides %>% 
+  group_by(ymd, hour) %>% 
+  slice(1)
+
+skk.env5 <- merge(skk.env4, skk.tides2, by = c('ymd', 'hour'))
+
+write.csv(skk.env5, 'skk.env2.csv')
+
+
+# Koyuk arrays - Point Dexter, Bald Head
+koy.env <- subset(r, Array %in% c('Bald Head', 'Point Dexter'))
+koy.env$mdy <- as_date(koy.env$date.datetime.)
+
+## Temp- Point Dexter 2021
+koy.temp <- read.csv('temp/Point_Dexter_2021.csv')
+
+koy.temp2 <- rbind(koy.temp, den20)
+
+den20 <- read.csv('temp/Cape_Denbeigh_2020.csv')
+
+koy.temp2$mdy.hms <- mdy_hm(koy.temp2$ï..date)
+koy.temp2$mdy <- as_date(koy.temp2$mdy.hms)
+koy.temp2$hour <- hour(koy.temp2$mdy.hms) 
+koy.temp2 <- koy.temp2[-c(1:2),]
+koy.env2 <- merge(koy.env, koy.temp2, by = c('mdy', 'hour'))
+
+## Wind- Koyuk wind 2020 and 2021
+kwind20 <- read.csv('wind/koyuk_wind_2020.csv')
+kwind21 <- read.csv('wind/koyuk_wind_2021.csv')
+
+kwind <- rbind(kwind20, kwind21)
+kwind$mdy.hms <- ymd_hms(kwind$time, tz = 'US/Alaska')
+kwind$mdy <- as_date(kwind$mdy.hms)
+kwind$hour <- hour(kwind$mdy.hms)
+
+kwind$md <- abs(as.numeric(kwind$wind_from_direction) - 270)
+kwind$u <- as.numeric(kwind$wind_speed) * cos(kwind$md)
+kwind$v <- as.numeric(kwind$wind_speed) * sin(kwind$md)
+
+koy.env3 <- merge(koy.env2, kwind, by =c('mdy', 'hour'))
+
+## Tides- skk tides
+koy.env4 <- merge(koy.env3, skk.tides2, by = c('mdy', 'hour'))
+
+write.csv(koy.env4, 'koy.env.csv')
+
+
+unk <- read.csv('unk.env.csv')
+skk <- read.csv('skk.env2.csv')
+koy <- read.csv('koy.env.csv')
+
+r.env <- rbind(unk, skk, koy)
+
+write.csv(r.env, 'r_env.csv')
