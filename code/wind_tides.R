@@ -1,6 +1,6 @@
 
 
-#Unalakleet arrays: 'Blueberry Creek, Point Creek, and Black Point'
+#Unalakleet arrays: 'Blueberry Creek, Point Creek, and Black Point' ####
 
 # Positive u wind is from the west
 # Positive v wind is from the south
@@ -160,7 +160,7 @@ skk.env5 <- merge(skk.env4, skk.tides2, by = c('ymd', 'hour'))
 write.csv(skk.env5, 'skk.env2.csv')
 
 
-# Koyuk arrays - Point Dexter, Bald Head
+# Koyuk arrays - Point Dexter, Bald Head ####
 koy.env <- subset(r, Array %in% c('Bald Head', 'Point Dexter'))
 koy.env$mdy <- as_date(koy.env$date.datetime.)
 
@@ -205,3 +205,50 @@ koy <- read.csv('koy.env.csv')
 r.env <- rbind(unk, skk, koy)
 
 write.csv(r.env, 'r_env.csv')
+
+# Check data ####
+env_col <- read.csv('data/r_env_colClasses.csv')
+
+env <- read.csv('data/r_env.csv', colClasses = paste(env_col[1,]))
+
+str(env)
+
+### Array
+ggplot(env, aes(Array)) +
+  geom_bar()
+
+### Distance
+hist(env$dist)
+
+### Freq
+hist(env$freq)
+
+### Prop
+hist(env$prop)
+summary(env$prop)
+
+### U wind
+hist(env$u)
+summary(env$u)
+
+### V wind
+hist(env$v)
+summary(env$v)
+
+### Sea level
+hist(env$sea_level)
+
+### Temp
+hist(env$temp)
+summary(env$temp)
+env[which.min(env$temp),]
+env[which(env$temp == min(env$temp, na.rm =T)), ]
+
+## Check for colinearity
+# Hour and temp
+pairs(env[,c(2,11)])
+# Temp and yday
+pairs(env[,c(4,11)])
+
+
+pairs(env[,c(2, 4:5, 8:11)])

@@ -93,18 +93,145 @@ r2020.plot3 <- ggplot(data = r2020, aes(x = dist, y = prop)) +
   scale_x_continuous(expand = c(0,0)) +
   scale_y_continuous(limits = c(0,1), expand = c(0,0)) +
   theme_bw() +
-  theme(legend.position = c(.75,.75),
-        legend.background = element_blank(),
-        legend.box.background = element_rect(colour = "black"))
+  theme(axis.title.y = element_text(size = 14, margin = margin(t = 0, r = 10, b = 0, l = 0), colour = "black"),
+         axis.title.x = element_text(size = 14, margin = margin(t = 10, r = 0, b = 0, l = 0), colour = "black"),
+         #set the font type
+         text = element_text(),
+         #modify plot title, the B in this case
+         plot.title = element_text(face = "bold"),
+         #position the legend on the figure
+         legend.position = c(.75,.75),
+         legend.background = element_blank(),
+         legend.box.background = element_rect(colour = "black"),
+         legend.title = element_text(size = 14),
+         #adjust size of text for legend
+         legend.text = element_text(size = 14),
+         #margin for the plot
+         plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+         strip.background = element_blank(),
+         strip.text = element_text(size = 14),
+         #set size of the tick marks for y-axis
+         axis.ticks.y = element_line(size = 0.5),
+         #set size of the tick marks for x-axis
+         axis.ticks.x = element_line(size = 0.5),
+         #adjust length of the tick marks
+         axis.ticks.length = unit(0.2,"cm"),
+         #set size and location of the tick labels for the y axis
+         axis.text.y = element_text(colour = "black", size = 10, angle = 0, vjust = 0.5, hjust = 1,
+                                    margin = margin(t = 0, r = 5, b = 0, l = 0)),
+         #set size and location of the tick labels for the x axis
+         axis.text.x = element_text(colour = "black", size = 10, angle = 0, vjust = 0, hjust = 0.5,
+                                    margin = margin(t = 5, r = 0, b = 0, l = 0)),
+         #set the axis size, color, and end shape
+         axis.line = element_line(colour = "black", size = 0.5, lineend = "square"))
 
-r2020.plot2
+  
 
-ggsave(r2020.plot2, file = "figs/r_2020_dist.png", width = 23, height = 15, units = "cm", dpi = 300)
+r2020.plot3
+
+ggsave(r2020.plot3, file = "figs/r_2020_dist.png", width = 23, height = 15, units = "cm", dpi = 300)
 
 #2021 ####
+r2021.plot3 <- ggplot(data = r2021, aes(x = dist, y = prop)) +
+  geom_smooth(method = 'loess', aes(col = Array)) +
+  geom_smooth(method='lm', formula= y~x, color = 'black', linetype = 'dashed', 
+              se = F, size = 1.5) +
+  xlab('Distance (m)') +
+  ylab('Detection proportion') +
+  scale_color_brewer(palette = 'Set1') +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,1), expand = c(0,0)) +
+  theme_bw() +
+  theme (axis.title.y = element_text(size = 14, margin = margin(t = 0, r = 10, b = 0, l = 0), colour = "black"),
+         axis.title.x = element_text(size = 14, margin = margin(t = 10, r = 0, b = 0, l = 0), colour = "black"),
+         #set the font type
+         text = element_text(),
+         #modify plot title, the B in this case
+         plot.title = element_text(face = "bold"),
+         #position the legend on the figure
+         legend.position = c(.75,.75),
+         legend.background = element_blank(),
+         legend.box.background = element_rect(colour = "black"),
+         legend.title = element_text(size = 14),
+         #adjust size of text for legend
+         legend.text = element_text(size = 14),
+         #margin for the plot
+         plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+         strip.background = element_blank(),
+         strip.text = element_text(size = 14),
+         #set size of the tick marks for y-axis
+         axis.ticks.y = element_line(size = 0.5),
+         #set size of the tick marks for x-axis
+         axis.ticks.x = element_line(size = 0.5),
+         #adjust length of the tick marks
+         axis.ticks.length = unit(0.2,"cm"),
+         #set size and location of the tick labels for the y axis
+         axis.text.y = element_text(colour = "black", size = 10, angle = 0, vjust = 0.5, hjust = 1,
+                                    margin = margin(t = 0, r = 5, b = 0, l = 0)),
+         #set size and location of the tick labels for the x axis
+         axis.text.x = element_text(colour = "black", size = 10, angle = 0, vjust = 0, hjust = 0.5,
+                                    margin = margin(t = 5, r = 0, b = 0, l = 0)),
+         #set the axis size, color, and end shape
+         axis.line = element_line(colour = "black", size = 0.5, lineend = "square"))
+
+r2021.plot3
+
+ggsave(r2021.plot3, file = "figs/r_2021_dist.png", width = 23, height = 15, units = "cm", dpi = 300)
 
 rec <- read.csv('data/rec_2021.csv')
 
+
+r <- rbind(r2020, r2021)
+
+
+r.plot <- ggplot(data = r, aes(x = dist, y = prop)) +
+  facet_wrap(~year(date.datetime.), scales = 'free_x') +
+  geom_smooth(method = 'loess', aes(col = Array)) +
+  geom_smooth(method='lm', formula= y~x, color = 'black', linetype = 'dashed', 
+              se = F, size = 1.5) +
+  xlab('Distance (m)') +
+  ylab('Detection proportion') +
+  scale_color_brewer(palette = 'Set1') +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,1), expand = c(0,0)) +
+  theme_bw() +
+  theme (axis.title.y = element_text(size = 14, margin = margin(t = 0, r = 10, b = 0, l = 0), colour = "black"),
+         axis.title.x = element_text(size = 14, margin = margin(t = 10, r = 0, b = 0, l = 0), colour = "black"),
+         #set the font type
+         text = element_text(),
+         #modify plot title, the B in this case
+         plot.title = element_text(face = "bold"),
+         #position the legend on the figure
+         legend.position = c(.8,.75),
+         legend.background = element_blank(),
+         legend.box.background = element_rect(colour = "black"),
+         legend.title = element_text(size = 14),
+         #adjust size of text for legend
+         legend.text = element_text(size = 14),
+         #margin for the plot
+         plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+         strip.background = element_blank(),
+         strip.text = element_text(size = 14),
+         #set size of the tick marks for y-axis
+         axis.ticks.y = element_line(size = 0.5),
+         #set size of the tick marks for x-axis
+         axis.ticks.x = element_line(size = 0.5),
+         #adjust length of the tick marks
+         axis.ticks.length = unit(0.2,"cm"),
+         #set size and location of the tick labels for the y axis
+         axis.text.y = element_text(colour = "black", size = 10, angle = 0, vjust = 0.5, hjust = 1,
+                                    margin = margin(t = 0, r = 5, b = 0, l = 0)),
+         #set size and location of the tick labels for the x axis
+         axis.text.x = element_text(colour = "black", size = 10, angle = 0, vjust = 0, hjust = 0.5,
+                                    margin = margin(t = 5, r = 0, b = 0, l = 0)),
+         #set the axis size, color, and end shape
+         axis.line = element_line(colour = "black", size = 0.5, lineend = "square"))
+
+r.plot
+
+ggsave(r.plot, file = "figs/r_dist.png", width = 23, height = 15, units = "cm", dpi = 300)
+
+rec <- read.csv('data/rec_2021.csv')
 ## Column classes
 r_colClasses <- read.csv('data/r_colClasses.csv')
 ## Receiver detection data (must be named 'rX.X')
@@ -646,7 +773,7 @@ r6$Array <- 'Point Creek'
 r7$Array <- 'Black Point'
 
 r2021 <- rbind(r1, r2, r3, r4, r5, r6, r7)
-r2021$Array <- factor(r2021$Array, levels = c('Bald Head', 'Point Dexter', 'Cape Denbeigh',
+r2020$Array <- factor(r2020$Array, levels = c('Bald Head', 'Point Dexter', 'Cape Denbeigh',
                                               'Junction Creek', 'Blueberry Creek',
                                               'Point Creek', 'Black Point'))
 

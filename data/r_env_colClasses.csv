@@ -1,0 +1,2 @@
+mdy,hour,Array,yday,dist,freq,prop,u,v,sea_level,temp
+character,integer,factor,integer,numeric,numeric,numeric,numeric,numeric,numeric,numeric
