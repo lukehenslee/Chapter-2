@@ -79,12 +79,12 @@ ggplot(data = mar2, aes(x = dist, y = prop)) +
          #set the axis size, color, and end shape
          axis.line = element_line(colour = "black", size = 0.5, lineend = "square"))
 
-# Try with the mystery data
+# Try with the mystery data ####
 
-riv24 <- read.csv('data/range/marine_range_24.csv', skip = 45)
+riv24 <- read.csv('data/range/marine_range_24.csv')
 riv71 <- read.csv('data/range/marine_range_71.csv', skip = 45)
 
-marx2 <- rbind(mar24, mar71)
+marx2 <- rbind(riv24, riv71)
 
 marx2$unix <- as.numeric(mdy_hms(paste(marx2$Date, marx2$Time, sep = ' ')))
 
@@ -179,6 +179,11 @@ koy$dist <- c(seq(350, 20, length = 20), seq(100, 400, length = 16))
 
 plot(koy$dist, koy$prop)
 
+koy.mod <- gam(prop ~ s(dist), data = koy)
+pred <- predict(koy.mod, se = T)
+koy$pred <- pred[['fit']]
+koy$se <- pred[['se.fit']]
+
 koy2 <- koy |>
   mutate(minute = 1 + ((unix - min(unix)) %/% 60)) |>
   mutate(minute = factor(minute, levels = seq(1, max(minute)))) |>
@@ -230,6 +235,11 @@ unk.plot <- ggplot(data = unk, aes(x = dist, y = prop)) +
 
 unk.plot
 
+unk.mod <- gam(prop ~ s(dist), data = unk)
+pred <- predict(unk.mod, se = T)
+unk$pred <- pred[['fit']]
+unk$se <- pred[['se.fit']]
+
 ggsave(unk.plot, file = 'figs/unk_range_gam.png', width = 12, height = 10, units = "cm", dpi = 300)
 
 koy.plot <- ggplot(data = koy, aes(x = dist, y = prop)) +
@@ -237,7 +247,7 @@ koy.plot <- ggplot(data = koy, aes(x = dist, y = prop)) +
   geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = F) +
   xlab('Distance (m)') +
   ylab('Proportion of transmissions detected') +
-  scale_x_continuous(limits = c(50, 400), expand = c(0,0)) +
+  scale_x_continuous(limits = c(0, 400), expand = c(0,0)) +
   scale_y_continuous(limits = c(0, 1), expand = c(0,0)) +
   theme_classic() +
   theme (axis.title.y = element_text(size = 14, margin = margin(t = 0, r = 10, b = 0, l = 0), colour = "black"),
@@ -418,3 +428,141 @@ range.plot <- ggplot(marine3, aes(x = dist, color = Proportion, fill = Proportio
 range.plot
 
 ggsave(range.plot, file = 'figs/marine_range.png', width = 17, height = 15, units = "cm", dpi = 300)
+
+# Visreg ####
+
+koy.gam <- visreg(koy.mod, xvar = 'dist', band = F, gg = T) + 
+  geom_point() + 
+  xlab('Distance (m)') +
+  ylab('Proportion of transmissions detected') +
+  scale_x_continuous(limits = c(0, 400), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0, 1), expand = c(0,0)) +
+  theme_classic() +
+  theme (axis.title.y = element_text(size = 14, margin = margin(t = 0, r = 10, b = 0, l = 0), colour = "black"),
+         axis.title.x = element_text(size = 14, margin = margin(t = 10, r = 0, b = 0, l = 0), colour = "black"),
+         #set the font type
+         text = element_text(),
+         #modify plot title, the B in this case
+         plot.title = element_text(face = "bold"),
+         #position the legend on the figure
+         legend.position = c(.65, .7),
+         legend.title = element_text(size = 14),
+         #adjust size of text for legend
+         legend.text = element_text(size = 14),
+         #margin for the plot
+         plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+         strip.background = element_blank(),
+         strip.text = element_text(size = 14),
+         #set size of the tick marks for y-axis
+         axis.ticks.y = element_line(size = 0.5),
+         #set size of the tick marks for x-axis
+         axis.ticks.x = element_line(size = 0.5),
+         #adjust length of the tick marks
+         axis.ticks.length = unit(0.2,"cm"),
+         #set size and location of the tick labels for the y axis
+         axis.text.y = element_text(colour = "black", size = 10, angle = 0, vjust = 0.5, hjust = 1,
+                                    margin = margin(t = 0, r = 5, b = 0, l = 0)),
+         #set size and location of the tick labels for the x axis
+         axis.text.x = element_text(colour = "black", size = 10, angle = 0, vjust = 0, hjust = 0.5,
+                                    margin = margin(t = 5, r = 0, b = 0, l = 0)),
+         #set the axis size, color, and end shape
+         axis.line = element_line(colour = "black", size = 0.5, lineend = "square"))
+
+
+koy.gam
+ggsave(koy.gam, file = 'figs/koy_gam_v2.png', width = 17, height = 15, units = "cm", dpi = 300)
+
+
+unk.gam <- visreg(unk.mod, xvar = 'dist', band = F, gg = T) + 
+  geom_point() + 
+  xlab('Distance (m)') +
+  ylab('Proportion of transmissions detected') +
+  scale_x_continuous(limits = c(0, 400), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0, 1), expand = c(0,0)) +
+  theme_classic() +
+  theme (axis.title.y = element_text(size = 14, margin = margin(t = 0, r = 10, b = 0, l = 0), colour = "black"),
+         axis.title.x = element_text(size = 14, margin = margin(t = 10, r = 0, b = 0, l = 0), colour = "black"),
+         #set the font type
+         text = element_text(),
+         #modify plot title, the B in this case
+         plot.title = element_text(face = "bold"),
+         #position the legend on the figure
+         legend.position = c(.65, .7),
+         legend.title = element_text(size = 14),
+         #adjust size of text for legend
+         legend.text = element_text(size = 14),
+         #margin for the plot
+         plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+         strip.background = element_blank(),
+         strip.text = element_text(size = 14),
+         #set size of the tick marks for y-axis
+         axis.ticks.y = element_line(size = 0.5),
+         #set size of the tick marks for x-axis
+         axis.ticks.x = element_line(size = 0.5),
+         #adjust length of the tick marks
+         axis.ticks.length = unit(0.2,"cm"),
+         #set size and location of the tick labels for the y axis
+         axis.text.y = element_text(colour = "black", size = 10, angle = 0, vjust = 0.5, hjust = 1,
+                                    margin = margin(t = 0, r = 5, b = 0, l = 0)),
+         #set size and location of the tick labels for the x axis
+         axis.text.x = element_text(colour = "black", size = 10, angle = 0, vjust = 0, hjust = 0.5,
+                                    margin = margin(t = 5, r = 0, b = 0, l = 0)),
+         #set the axis size, color, and end shape
+         axis.line = element_line(colour = "black", size = 0.5, lineend = "square"))
+unk.gam
+ggsave(unk.gam, file = 'figs/unk_gam_v2.png', width = 17, height = 15, units = "cm", dpi = 300)
+
+# Scratch ####
+
+marine4 <- rbind(marine3, marine3,marine3,marine3,marine3,marine3)
+marine4$rec <- c(rep('1', length = 39), rep('2', length = 39),rep('3', length = 39),
+                     rep('4', length = 39),rep('5', length = 39),rep('6', length = 39))
+marine4$shore <- c(rep(300, length = 39),rep(600, length = 39),rep(1100, length = 39),
+                   rep(1600, length = 39),rep(2100, length = 39),rep(2600, length = 39))
+marine4$dist.shore <- marine4$dist + marine4$shore
+
+ggplot(marine4, aes(x = dist.shore, color = Proportion, fill = Proportion)) +
+  geom_bar() +
+  xlab('Distance from receiver (m)') +
+  ylab('') +
+  scale_x_continuous(limits = c(0, 1000)) +
+  scale_fill_brewer(palette = 'GnBu') +
+  scale_color_brewer(palette = 'GnBu') +
+  coord_polar(theta = 'y') +
+  theme_classic() +
+  theme(axis.title.y = element_text(size = 14, margin = margin(t = 0, r = 10, b = 0, l = 0), colour = "black"),
+        axis.title.x = element_text(size = 14, margin = margin(t = 10, r = 0, b = 0, l = 0), colour = "black"),
+        #set the font type
+        text = element_text(),
+        #modify plot title, the B in this case
+        plot.title = element_text(face = "bold"),
+        #position the legend on the figure
+        legend.title = element_text(size = 14),
+        #adjust size of text for legend
+        legend.text = element_text(size = 14),
+        #margin for the plot
+        plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm"),
+        strip.background = element_blank(),
+        strip.text = element_text(size = 14),
+        #set size of the tick marks for y-axis
+        axis.ticks.y = element_line(size = 0.5),
+        #set size of the tick marks for x-axis
+        axis.ticks.x = element_line(size = 0.5),
+        #adjust length of the tick marks
+        axis.ticks.length = unit(0.2,"cm"),
+        #set size and location of the tick labels for the y axis
+        axis.text.y = element_text(colour = "black", size = 10, angle = 0, vjust = 0.5, hjust = 1,
+                                   margin = margin(t = 0, r = 5, b = 0, l = 0)),
+        #set size and location of the tick labels for the x axis
+        axis.text.x = element_blank(),
+        #set the axis size, color, and end shape
+        axis.line = element_line(colour = "black", size = 0.5, lineend = "square")) 
+
+df <- data.frame(x = c(300, 600, 1100, 1600, 2100, 2600), y = rep(1, 6), r = 500)
+
+ggplot() +
+  geom_point(data = df, aes(x = x, y = y)) +
+  geom_circle(data = df, mapping = aes(x0 = x,  y0 = y, r = r), alpha = 0.33, fill = 'darkgreen') +
+  coord_fixed() +
+  scale_x_continuous(limits = c(0, 3100), expand = c(0,0)) +
+  theme_classic()
