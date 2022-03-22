@@ -11,7 +11,7 @@ library(rgl)
 
 ## import data 
  
-nest.df<-read.csv("C:/Users/Erik/Desktop/R/SAGRNest.csv", header=T)
+nest.df<-read.csv("C:/Users/lukeh/Desktop/Git_repos/Chapter-2/RMark/data/SAGRNest.csv", header=T)
 
 ## First lets take a look at the data structure Note the different categories 
 ## and determine if you need to change the type of any of the variables
@@ -210,7 +210,7 @@ Avg.est.44<- Avg.est[1:44, ]
 
 ## Calculate nest success probability for a 37-day nesting interval 
 
-NS.37<- product(Avg.est.44[1:44, 2])
+NS.37<- prod(Avg.est.44[1:44, 2])
 NS.37
 
 ## Compute real parameter values for survival as a function of

@@ -1,2 +1,2 @@
 tag.ID,power,array,rec,ymd.hms,unix,rec.ID
-factor,integer,factor,factor,character,numeric,factor
+factor,integer,character,integer,character,numeric,factor
