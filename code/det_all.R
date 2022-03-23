@@ -27,18 +27,25 @@ library(lubridate)
 library(openxlsx)
 library(magrittr)
 
-# Set working directory ####
-setwd("Q:/RESEARCH/Tagging/Github/data/detections")
 
-# Import m-code list for reference 
-mcode <- read_csv("Q:/RESEARCH/Tagging/Github/data/M_code_list_raw.csv")
+
+# 2020 ####
+
+# Set working directory ####
+setwd("C:/Users/lhhenslee/Desktop/Git_repos/Chapter-2") # Work
+
+## Import data ####
+# colClasses
+col <- read.csv("data/tag_colClasses.csv", header = T)
+# Import the raw data
+tag.raw.2020 <- read.csv("data/tag_raw_2020.csv", colClasses = paste(col[1,]))
+
   # Create vector of applicable tag IDs
-tagID <- mcode %>% 
-  dplyr::filter(`M-code` %in% seq(75, 7995, by = 20), 
-                 Species == "Coho") 
+tagID <- tag.raw.2020[which(tag.raw.2020[,1] %in% seq(75, 7995, by = 20)),]
 
 # Import receiver data and combine ####
   # Make list of file names in detection folder
+setwd("C:/Users/lhhenslee/Desktop/Git_repos/Chapter-2/data/det/2020")
 temp <- list.files(pattern = "*.csv")
 
   # Read file content
@@ -61,8 +68,8 @@ names(det_all)[5] <- "receiver.ID"
 names(det_all)[3] <- "tag.ID"
 
 # Filter detections ####
-det_all_filter <- dplyr::filter(det_all, between(Date, as.Date("2020-7-29"), as.Date("2020-9-15")), 
-                       tag.ID %in% tagID$`M-code`,
+det_all_filter <- dplyr::filter(det_all, between(Date, as.Date("2020-7-29"), as.Date("2020-9-5")), 
+                       tag.ID %in% tagID$mcode,
                        Power > 0) %>% 
        group_by(tag.ID) 
 
@@ -79,10 +86,69 @@ det_all_filter_arrange <- arrange(det_all_filter, ymd_hms_numeric)
 # Write .csv files ####
 
 # Make separate .csv file for each tag
-setwd("Q:/RESEARCH/Tagging/Github/output/species_filter_arranged")
+setwd("C:/Users/lhhenslee/Desktop/Git_repos/Chapter-2/data/det/2020/tags")
 
 det_all_filter_arrange %>%
   group_by(tag.ID) %>%
   group_walk(~ write_csv(.x, paste0(.y$tag.ID, ".csv")))
   
   
+# 2021 ####
+
+# Set working directory ####
+setwd("C:/Users/lhhenslee/Desktop/Git_repos/Chapter-2") # Work
+
+## Import data ####
+# colClasses
+col <- read.csv("data/tag_colClasses.csv", header = T)
+# Import the raw data
+tag.raw.2021 <- read.csv("data/tag_raw_2021.csv", colClasses = paste(col[1,]))
+
+# Import receiver data and combine ####
+# Make list of file names in detection folder
+setwd("C:/Users/lhhenslee/Desktop/Git_repos/Chapter-2/data/det/2021")
+temp <- list.files(pattern = "*.csv")
+
+# Read file content
+det <- lapply(temp, read_csv, 
+              col_types = cols(Date = col_date(format = "%m/%d/%Y"), 
+                               Power = col_double(), TOA = col_skip(), 
+                               `Tag ID` = col_character(), Time = col_time(format = "%H:%M:%S"), 
+                               Type = col_skip(), Value = col_skip()), skip = 45)
+
+# Read file names
+filenames <- temp %>% basename() %>% as.list()
+
+# Combine file content list with file name list and remove ".csv"
+det_named <- mapply(c, det, substr(filenames, 1, 3), SIMPLIFY = F)
+
+# Combine lists and lable receiver ID column
+det_all <- rbindlist(det_named, fill = T)
+names(det_all)[5] <- "receiver.ID"
+
+names(det_all)[3] <- "tag.ID"
+
+# Filter detections ####
+det_all_filter <- dplyr::filter(det_all, between(Date, as.Date("2021-6-26"), as.Date("2021-9-8")), 
+                                tag.ID %in% tag.raw.2021$mcode,
+                                Power > 0) %>% 
+  group_by(tag.ID) 
+
+# Modify date/time column ####
+det_all_filter$ymd_hms <- paste(det_all_filter$Date, det_all_filter$Time, sep = " ") 
+
+det_all_filter$ymd_hms_numeric <- as.numeric(ymd_hms(det_all_filter$ymd_hms, tz = 'US/Alaska'))
+
+det_all_filter <- subset(det_all_filter, select = -c(Date, Time))
+
+# Arrange chronologically 
+det_all_filter_arrange <- arrange(det_all_filter, ymd_hms_numeric)
+
+# Write .csv files ####
+
+# Make separate .csv file for each tag
+setwd("C:/Users/lhhenslee/Desktop/Git_repos/Chapter-2/data/det/2021/tags")
+
+det_all_filter_arrange %>%
+  group_by(tag.ID) %>%
+  group_walk(~ write_csv(.x, paste0(.y$tag.ID, ".csv")))
