@@ -17,14 +17,14 @@ library(tools)
 library(ggplot2)
 
 # Set working directory ########################################################
-setwd("Q:/RESEARCH/Tagging/Github/data")
+setwd("C:/Users/lhhenslee/Desktop/Git_repos")
 
 # Import data ##################################################################
   # Make list of file names in detection folder
-temp <- list.files("det_all_2021", pattern = "*.csv")
+temp <- list.files("det", pattern = "*.csv")
 
   # Read file content
-det <- lapply(paste0("det_all_2021/", temp), read.csv, 
+det <- lapply(paste0("det/", temp), read.csv, 
               colClasses = c("integer", "factor", "character", "integer"))
 
   # Read file names
@@ -33,7 +33,7 @@ filenames <- temp %>% basename() %>% as.list()
   # Combine file content list with file name list to create tag ID
 det <- mapply(c, det, file_path_sans_ext(filenames), SIMPLIFY = F)
 
-  # Combine lists and lable 'tag.ID' column
+  # Combine lists and label 'tag.ID' column
 det_all <- rbindlist(det, fill = T)
 names(det_all)[5] <- "tag.ID"
 
@@ -67,7 +67,7 @@ det_list_term <- split(det_term, det_term$tag.ID)
 det_list <- list() 
 
     # Create vector of inriver locations
-ff1.loc <- c("K", "T", "Y", "I", "S", "B", "U", "G")
+ff1.loc <- c("K", "B", "Y", "I", "N", "S", "T", "E", "U", "G")
 
   # Start loop
 for(i in (1:length(det_list_term))) {
@@ -137,38 +137,22 @@ det_sum_max <- do.call(rbind, det_list)
 # Combine det.order and V8 into "det.order"
 det_sum_max <- unite(det_sum_max, det.order, c(det.order, ...8), sep = "")
 
-  # Then remove any dupliate max power for each group
+  # Then remove any duplicate max power for each group
 det_sum_max <- det_sum_max[!duplicated(det_sum_max[c("tag.ID", "det.order")]),]
 
 # Clean dataframe ##############################################################
-  # Remove 'rec' and 'det.order' and order columns
-det_sum_fin <- det_sum_max[ ,-c(3,7)]
+  # Remove 'det.order' and order columns
+det_sum_fin <- det_sum_max[ ,-7]
 det_sum_fin <- det_sum_fin %>% 
   relocate(tag.ID)
 
   # Arrange chronologically 
-det_sum_fin <- arrange(det_sum_fin, unix) 
+det_sum_fin <- arrange(det_sum_fin, ymd_hms_numeric) 
 
 # Write .csv file for detection summary ########################################
   # Set destination for summaries 
-setwd("Q:/RESEARCH/Tagging/Github/output/det_sum_2021")
-
-  # Group by 'tag.ID' and create .csv files 
-det_sum_fin %>%
-  group_by(tag.ID) %>%
-  group_walk(~ write_csv(.x, paste0(.y$tag.ID, ".csv")))
+setwd("C:/Users/lhhenslee/Desktop/Git_repos/Chapter-2/data")
 
   # Create one big data frame and create .csv file
-write_csv(det_sum_fin, "det_sum.csv")
-
-# Create copies in the data forlder
-setwd("Q:/RESEARCH/Tagging/Github/data/det_sum_2021")
-
-  # Group by 'tag.ID' and create .csv files 
-det_sum_fin %>%
-  group_by(tag.ID) %>%
-  group_walk(~ write_csv(.x, paste0(.y$tag.ID, ".csv")))
-
-  # Create one big data frame and create .csv file
-write_csv(det_sum_fin, "det_sum_2021.csv")
+write_csv(det_sum_fin, "detsum.csv")
   
