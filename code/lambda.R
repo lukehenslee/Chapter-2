@@ -11,6 +11,7 @@
 # Load packages ####
 library(tidyverse)
 library(visreg)
+library(lubridate)
 
 
 # Set working directory ####
@@ -283,3 +284,4 @@ det6no <- anti_join(detpast6, det6, by = 'tag.ID')
 nrow(det6yes)/nrow(detpast6)
 
 # 0.8333333
+

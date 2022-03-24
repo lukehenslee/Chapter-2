@@ -5,7 +5,14 @@
 #
 #Purpose: 
 #==================================================================================================
-#NOTES:  
+#NOTES: Multistate mark recapture detection histories
+# States:
+# A: Shaktoolik
+# B: Unalakleet 1
+# C: Unalakleet 2
+# D: Unalakleet 3
+# Y: Exploratory stream
+# X: Spawning stream
 #==================================================================================================
 
 # Load packages ####
