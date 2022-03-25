@@ -4,7 +4,7 @@
 ## colCloasses="character" statement fixes this, and then the following statements 
 ## convert the Group and frequency columns back to appropriate format.
 
-ch.df.f<- read.csv("C:/Users/Erik/Desktop/R/Lab7file.csv", colClasses = "character")
+ch.df.f<- read.csv("data/Lab7file.csv", colClasses = "character")
 ch.df.f$Group<- as.factor(ch.df.f$Group)
 ch.df.f$freq<- as.numeric(ch.df.f$freq)
 

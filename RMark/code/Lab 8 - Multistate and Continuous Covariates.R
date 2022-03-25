@@ -43,7 +43,7 @@ SAGR.ms.ddl$S
 ## at this code and see how it is asking for the row names (PIM values) for all of the detection 
 ## parameters where the stratum is identified as S. 
 
-p.S.indices=as.numeric(row.names(SAGR.ms.ddl$p[SAGR.ms.ddl$p$stratum=="S",]))
+p.S.indices=as.numeric(row.names(SAGR.ms.ddl$p[SAGR.ms.ddl$p$stratum=="S",])) # S for successful clutch
 
 p.S.indices
 
@@ -72,7 +72,7 @@ p.state=list(formula=~stratum, fixed=list(index=p.S.indices, value=p.S.values))
 ## mentioned in the handout, Age was likely confounded with transmitter failure, so was important 
 ## to incorporate here. 
 
-phi.state.age=list(formula=~stratum + cov)
+phi.state.age=list(formula=~stratum + covariates)
 
 ## and for the psi term this is where we can get a little more creative with how we 
 ## proceed through model selection
@@ -200,14 +200,14 @@ ms.phi.models=function ()
   S.dot=list(formula=~1)
   S.state=list(formula=~stratum)
   S.time=list(formula=~time)
-  S.age=list(formula=~cov)
+  S.age=list(formula=~age)
   
   ## and joint additive models
   
   S.state.time=list(formula=~stratum + time)
-  S.state.age=list(formula=~stratum + cov)
+  S.state.age=list(formula=~stratum + age)
   S.age.time=list(formula=~age + time)
-  S.state.time.age=list(formula=~stratum + time + cov)
+  S.state.time.age=list(formula=~stratum + time + age)
   
   ## fixed values for p based on our earlier analyses
   
@@ -255,7 +255,7 @@ ms.psi.models=function ()
   
   ## phi structures from step 1
   
-  S.state.age=list(formula=~stratum + cov)
+  S.state.age=list(formula=~stratum + age)
   
   ## fixed values for p based on our earlier analyses
   
@@ -268,8 +268,8 @@ ms.psi.models=function ()
   Psi.time = list(formula=~time) 
   Psi.state.precip = list(formula=~stratum + precip) 
   Psi.precip = list(formula=~precip) 
-  Psi.state.age = list(formula=~stratum + cov) 
-  Psi.age = list(formula=~cov) 
+  Psi.state.age = list(formula=~stratum + age) 
+  Psi.age = list(formula=~age) 
   Psi.dot = list(formula=~1) 
   
   ## plus one interaction model to test a specific hypothesis 
