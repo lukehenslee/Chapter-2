@@ -1,2 +1,6 @@
 tag.ID,power,array,rec,ymd.hms,unix
+<<<<<<< HEAD
 numeric,integer,factor,factor,character,numeric
+=======
+factor,integer,factor,factor,character,numeric
+>>>>>>> 173152ced44f0ae880ddbc133fe4c91709ec4c2c

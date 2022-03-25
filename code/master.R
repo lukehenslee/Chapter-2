@@ -24,6 +24,7 @@ library(lubridate)
 library(tools)
 
 # Set working directory ########################################################
+<<<<<<< HEAD
 setwd("Q:/RESEARCH/Tagging/Github/data") # Work
 setwd("C:/Users/lukeh/Desktop/Git_repos/Chapter-2") # School
 
@@ -41,6 +42,46 @@ tag <- read.csv("data/tag.csv", colClasses = paste(col[1,]))
 col <- read.csv("data/recap_colClasses.csv", header = T)
 recap <- read.csv("data/recap.csv", colClasses = paste(col[1,]))
 
+=======
+setwd("Q:/RESEARCH/Tagging/Github/data")
+
+# Import data ##################################################################
+  # Import raw mcode list
+    # 'colClasses.csv' is just a list for 'colClasses' argument of read.csv() 
+colClasses <- read.csv("colClasses_raw.csv", header = T)
+    # Import the raw data
+mcode_raw <- read.csv("mcode_raw_2021.csv") 
+
+  # Create 'mcode' which will manipulate and add columns to 'mcode_raw'
+mcode <- mcode_raw
+
+  # Import detection history summary
+det_sum <- read.csv("det_sum_2021/det_sum_2021.csv")
+
+  # Import recapture data
+recap_dat <- read.csv("recap_2021.csv")
+
+# Mesh size ####################################################################
+  # Excel converts mesh size to a date, so we'll fix that
+  # Create empty vector
+#mesh <- vector()
+
+  # Start for() loop
+#for(i in 1:nrow(mcode_raw)) {
+#  if(mcode_raw[i, 17] == "8-Jul") {
+#    mesh[i] <- "5-7/8 in" 
+#  } else {
+#    if(mcode_raw[i, 17] == "8-May") {
+#      mesh[i] <- "5-5/8 in"
+#    } else {
+#      mesh[i] <- "combined"
+#    }
+#  }
+#}
+
+  # Add to mcode
+#mcode$mesh.size <- mesh
+>>>>>>> 173152ced44f0ae880ddbc133fe4c91709ec4c2c
 
 # Capture location #############################################################
   # The study area is split into 4 marine capture regions, this script assigns
@@ -50,6 +91,7 @@ recap <- read.csv("data/recap.csv", colClasses = paste(col[1,]))
 capture.loc <- vector()
   
   # Start for() loop
+<<<<<<< HEAD
 for(i in 1:nrow(tag)) {
   if(tag[i,15] < 64.37609 && tag[i,15] > 64.13129) {
     capture.loc[i] <- "5"
@@ -58,6 +100,16 @@ for(i in 1:nrow(tag)) {
     capture.loc[i] <- "6a"
   } else {
     if(tag[i,15] < 63.95384 && tag[i,15] > 63.69065) {
+=======
+for(i in 1:nrow(mcode_raw)) {
+  if(mcode_raw[i,15] < 64.37609 && mcode_raw[i,15] > 64.13129) {
+    capture.loc[i] <- "5"
+} else {
+  if(mcode_raw[i,15] < 64.13129 && mcode_raw[i,15] > 63.95384) {
+    capture.loc[i] <- "6a"
+  } else {
+    if(mcode_raw[i,15] < 63.95384 && mcode_raw[i,15] > 63.69065) {
+>>>>>>> 173152ced44f0ae880ddbc133fe4c91709ec4c2c
       capture.loc[i] <- "6b"
     } else {
       capture.loc[i] <- "6c"
@@ -66,6 +118,7 @@ for(i in 1:nrow(tag)) {
 }
 }
 
+<<<<<<< HEAD
 # Create empty vector
 cap.loc <- vector()
 
@@ -81,6 +134,10 @@ for(i in 1:nrow(tag)) {
 
 
 tag$cap.loc <- cap.loc
+=======
+  # Add capture.loc to mcode list
+mcode$capture.loc <- capture.loc
+>>>>>>> 173152ced44f0ae880ddbc133fe4c91709ec4c2c
 
 # Deploy ymd.hms and unix timestamp ###########################################
   # Combine 'capture.date' and 'time.out' into deploy.ymd.hms
@@ -100,10 +157,17 @@ ff.det.ymd.hms <- vector()
 ff.det.unix <- vector()
 
   # Start for() loop
+<<<<<<< HEAD
 for(i in 1:nrow(tag)) {
   if(tag[i, 1] %in% detsum[, 1]) {
     idx <- filter(detsum, detsum[, 1] == tag[i, 1])
     idx2 <- aggregate(idx[,3], idx[1], paste, collapse = "")
+=======
+for(i in 1:nrow(mcode_raw)) {
+  if(mcode_raw[i, 1] %in% det_sum[, 1]) {
+    idx <- dplyr::filter(det_sum, det_sum[, 1] == mcode_raw[i, 1])
+    idx2 <- aggregate(idx[,3], idx[1], paste, collapse = ",")
+>>>>>>> 173152ced44f0ae880ddbc133fe4c91709ec4c2c
     det.hist[i] <- idx2[,2]
     ff.det.ymd.hms[i] <- idx[nrow(idx), 4]
     ff.det.unix[i] <- idx[nrow(idx), 5]
@@ -113,30 +177,50 @@ for(i in 1:nrow(tag)) {
 }
 
   # Add new column to mcode list
+<<<<<<< HEAD
 tag$det.hist <- det.hist
 
 # Recapture ####################################################################
   # Create empty vector
 recap1 <- vector()
+=======
+mcode$det.hist <- det.hist
+
+# Recapture ####################################################################
+  # Create empty vector
+recap <- vector()
+>>>>>>> 173152ced44f0ae880ddbc133fe4c91709ec4c2c
 ff.recap.ymd.hms <- vector()
 ff.recap.unix <- vector()
 
   # This for() loop adds the recap location or returns NA's to applicable rows
   # It also replaces final.fate.ymd.hms and final.fate.unix for recaptured fish
+<<<<<<< HEAD
 for(i in 1:nrow(tag)) {
   if(tag[i, 1] %in% recap[ ,5]) {
     idx <- dplyr::filter(recap, recap[ ,5] == tag[i, 1]) 
     recap1[i] <- paste0(idx[9]) 
+=======
+for(i in 1:nrow(mcode_raw)) {
+  if(mcode_raw[i, 1] %in% recap_dat[ ,5]) {
+    idx <- dplyr::filter(recap_dat, recap_dat[ ,5] == mcode_raw[i, 1]) 
+    recap[i] <- paste0(idx[9]) 
+>>>>>>> 173152ced44f0ae880ddbc133fe4c91709ec4c2c
     ff.recap.ymd.hms[i] <- as.character(mdy_hm(idx[7]))
     ff.recap.unix[i] <- as.numeric(mdy_hm(idx[7]), 
                                      tz = 'US/Alaska')
   } else {
+<<<<<<< HEAD
     recap1[i] <- NA
+=======
+    recap[i] <- NA
+>>>>>>> 173152ced44f0ae880ddbc133fe4c91709ec4c2c
     ff.recap.ymd.hms[i] <- NA
     ff.recap.unix[i] <- NA
   }
 }
 
+<<<<<<< HEAD
 recap2 <- ifelse(recap1 %in% c('6', '6a', '6b'), '9', ifelse(recap1 == '5', '8', recap1))
 
 recap3 <- ifelse(recap1 %in% c('6', '6a', '6b'), 'B', 
@@ -147,6 +231,10 @@ recap3 <- ifelse(recap1 %in% c('6', '6a', '6b'), 'B',
 
   # Add new column to mcode list
 tag$recap <- recap3
+=======
+  # Add new column to mcode list
+mcode$recap <- recap
+>>>>>>> 173152ced44f0ae880ddbc133fe4c91709ec4c2c
 
 # Final fate ###################################################################
 

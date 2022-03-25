@@ -13,12 +13,17 @@ library(RMark)
 
 # Set working directory ####
 setwd("C:/Users/lhhenslee/Desktop/Luke/School/Thesis/Chapter 2")
+<<<<<<< HEAD
 ch5 <- read.csv('ch5.csv')
 
 ch5$ch <- str_pad(ch5$ch, width = 4, side = 'right', pad = '0')
 ch5m <- ch5 %>% count(ch)
 
 mstrata <- ch5m
+=======
+
+
+>>>>>>> 173152ced44f0ae880ddbc133fe4c91709ec4c2c
 data(mstrata)
 
 run.mstrata=function()
@@ -85,4 +90,8 @@ Psilist.rev=get.real(mod.rev,"Psi",vcv=TRUE)
 Psivalues=Psilist$estimates
 Psivalues.rev=Psilist.rev$estimates
 TransitionMatrix(Psivalues[Psivalues$time==1,])
+<<<<<<< HEAD
 TransitionMatrix(Psivalues.rev[Psivalues.rev$occ==1,], ch = TRUE)
+=======
+TransitionMatrix(Psivalues.rev[Psivalues.rev$occ==1,])
+>>>>>>> 173152ced44f0ae880ddbc133fe4c91709ec4c2c

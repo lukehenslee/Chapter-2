@@ -287,7 +287,10 @@ nrow(det6yes)/nrow(detpast6)
 
 # 0.8333333
 
+<<<<<<< HEAD
 # Freshwater 2021 ####
 
 
 
+=======
+>>>>>>> 173152ced44f0ae880ddbc133fe4c91709ec4c2c

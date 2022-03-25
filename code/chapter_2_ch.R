@@ -6,6 +6,7 @@
 #Purpose: 
 #==================================================================================================
 #NOTES: Multistate mark recapture detection histories
+<<<<<<< HEAD
 #
 # States:
 # A: Norton Bay
@@ -13,6 +14,15 @@
 # C: Unalakleet
 # Y: Outside
 # X: Freshwater
+=======
+# States:
+# A: Shaktoolik
+# B: Unalakleet 1
+# C: Unalakleet 2
+# D: Unalakleet 3
+# Y: Exploratory stream
+# X: Spawning stream
+>>>>>>> 173152ced44f0ae880ddbc133fe4c91709ec4c2c
 #==================================================================================================
 
 # Load packages ####
