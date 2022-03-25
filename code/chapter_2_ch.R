@@ -6,13 +6,13 @@
 #Purpose: 
 #==================================================================================================
 #NOTES: Multistate mark recapture detection histories
+#
 # States:
-# A: Shaktoolik
-# B: Unalakleet 1
-# C: Unalakleet 2
-# D: Unalakleet 3
-# Y: Exploratory stream
-# X: Spawning stream
+# A: Norton Bay
+# B: Shaktoolik
+# C: Unalakleet
+# Y: Outside
+# X: Freshwater
 #==================================================================================================
 
 # Load packages ####
@@ -24,43 +24,71 @@ library(openxlsx)
 library(magrittr)
 
 # Set working directory ####
-setwd("C:/Users/lhhenslee/Desktop/Luke/School/Thesis/Chapter 2")
+setwd("C:/Users/lukeh/Desktop/Git_repos/Chapter-2")
 
-# Import data ####
+# Import data ##################################################################
+# Import detsum
+# 'colClasses.csv' is just a list for 'colClasses' argument of read.csv() 
+col <- read.csv("data/detsum_colClasses.csv", header = T)
+detsum <- read.csv("data/detsum.csv", colClasses = paste(col[1,])) 
 
-# Import m-code list for reference 
-col <- read.csv("data/mcode_colClasses.csv", header = T)
+# Import tag data
+col <- read.csv("data/tag_colClasses.csv", header = T)
+tag <- read.csv("data/tag.csv", colClasses = paste(col[1,]))
 
-tags <- read.csv("data/mcode.csv", colClasses = paste(col[1,]))
+# Import recapture data
+col <- read.csv("data/recap_colClasses.csv", header = T)
+recap <- read.csv("data/recap.csv", colClasses = paste(col[1,]))
 
-coho <- tags %>% 
-  filter(species == 'coho')
+# Subset data ####
+coho <- tag[which(tag$species == 'coho'),]
 
-## This analysis only uses marine receiver detection, so delete inriver det
-det.2 <- det %>% 
-  filter(substr(receiver.ID, 1, 1) %in% c(1:7))
+# Build detection histories ####
 
-## Add an array ID
-det.2$array.ID <- substr(det.2$receiver.ID, 1, 1)
+# First we will combine 'capture.loc', 'det.hist', and 'recap' into one history
 
-## Add lateral ID
-det.2$lat.ID <- substr(det.2$receiver.ID, 3, 3)
+c <- unite(tag[, 25:27], col = hist, na.rm = TRUE, sep = '')
+c.hist <- str_replace_all(c$hist, '[5,6]', '')
+c.hist <- str_replace_all(c.hist, '[E,U,G]', 'B')
+c.hist <- str_replace_all(c.hist, '[S, T,]', 'A')
+c.hist <- ifelse(substr(c.hist, 1, 2) == 'A4', str_replace(c.hist, '[4]', 'B'), c.hist)
+c.hist <- ifelse(substr(c.hist, 1, 2) == 'B4', str_replace(c.hist, '[4]', 'A'), c.hist)
+c.hist <- ifelse(substr(c.hist, 1, 2) == 'A3', str_replace(c.hist, '[3]', 'Y'), c.hist)
+c.hist <- ifelse(substr(c.hist, 1, 2) == 'B7', str_replace(c.hist, '[7]', 'Y'), c.hist)
+write.csv(cbind(tag$det.hist, c$hist, c.hist, recap1), 'ch3.csv')
+
+# If the last two characters are the same (e.g. 'UU' for a fish detected by rec
+# and then recaptured), just keep one
+recap4 <- ifelse(substr(det.hist, nchar(det.hist), nchar(det.hist)) ==
+                    recap3, NA, recap3)
+
+tag$recap <- recap4
+
+dub <- tag[which(substr(tag$c.hist, nchar(tag$c.hist), nchar(tag$c.hist)) ==
+            substr(tag$c.hist, nchar(tag$c.hist)-1, nchar(tag$c.hist)-1)),]
 
 
-ggplot(coho.det, aes(x = rec)) +
-  geom_histogram(stat = 'count')
+histx <- str_replace_all(hist, '[5,6]', '')
+histx <- str_replace(histx, '[8]', 'B')
+histx <- str_replace(histx, '[9]', 'C')
 
-## Assign distance from shore
-### Receivers had wider spacing in 2021, so we need to account for that
-### In 2020, receivers were placed 300 m from shore and 300 m between 
-### for a total distance of 2.1 km from shore.
-### In 2021, the first receiver was 300 m from shore and the next receiver was
-### 300 m from that- subsequent receivers were placed 500 meters apart for a 
-### total distance of 3.1 m from shore.
 
-### In 2020, 300, 600, 900, 1200, 1500, 1800
 
-### In 2021, 300, 600, 1100, 1600, 2100, 2600
+histb <- histx[which(substr(histx, 1, 1) == 'B')]
+histbff <- ifelse(substr(histb, nchar(histb), nchar(histb)) %in% c('S', 'T', 'Y', 'I', 'N', 'E', 'U', 'G', ''), str_replace(histb, '[S,T]', 'B'), histb)
+histb2 <- ifelse(substr(histb, 2, 2) %in% c('S', 'T'), str_replace(histb, '[S,T]', 'B'), histb)
+histb3 <- ifelse(substr(histb2, 2, 2) == '4', str_replace(histb2, '[4]', 'C'), histb2)
+histb4 <- ifelse(substr(histb3, 2, 2) == '3', str_replace(histb3, '[3]', 'Y'), histb3)
+histb5 <- ifelse(substr(histb4, 3, 3) %in% c('E', 'U', 'G'), str_replace(histb4, '[E,U,G]', 'C'), histb4)
+histb6 <- ifelse(substr(histb5, 3, 3) == '4', str_replace(histb5, '[4]', 'B'), histb5)
+histb7 <- ifelse(substr(histb6, 3, 3) == '7', str_replace(histb6, '[7]', 'Y'), histb6)
 
-### First, parse mdy.hms
-det.2
+
+table(histb7)
+write.csv(cbind(histb, histb7), 'skk.hist.1.csv')
+histbx <- read.csv('skk.hist.1.csv', header = FALSE)
+cohoB <- coho %>% filter(cap.loc == '8')
+cohoB$ch <- str_pad(histbx$V4, width = 7, side =('right'), pad = '0')
+
+
+histc <- histx[which(substr(histx, 1, 1) == 'C')]
