@@ -39,9 +39,9 @@ coho21$tag.ID <- coho21$mcode
 detcoho20 <- merge(det, coho20[,c(18,33)], by = 'tag.ID')
 detcoho21 <- merge(det, coho21[,c(18,33)], by = 'tag.ID')
 
-# 2020 ####
+# Marine 2020 ####
 
-# Receiver array 2 ####
+## Receiver array 2 ####
 ## Any fish detected by array 2
 det2 <- distinct(detcoho20[which(detcoho20[,3] == '2'),], tag.ID, array, .keep_all = TRUE)
 
@@ -60,7 +60,7 @@ nrow(det2yes)/nrow(detpast2)
 
 ## 100%
 
-# Receiver array 3 ####
+## Receiver array 3 ####
 ## Any fish detected by array 3
 det3 <- distinct(detcoho20[which(detcoho20[,3] == '3'),], tag.ID, array, .keep_all = TRUE)
 
@@ -79,7 +79,7 @@ nrow(det3yes)/nrow(detpast3)
 
 # 100%
 
-# Receiver array 4 ####
+## Receiver array 4 ####
 ## Any fish detected by array 4
 det4 <- distinct(detcoho20[which(detcoho20[,3] == '4'),], tag.ID, array, .keep_all = TRUE)
 
@@ -111,7 +111,7 @@ nrow(det4yes)/nrow(detpast4)
 
 ## 0.92
 
-# Receiver array 5 ####
+## Receiver array 5 ####
 ## Any fish detected by array 5
 det5 <- distinct(detcoho20[which(detcoho20[,3] == '5'),], tag.ID, array, .keep_all = TRUE)
 
@@ -143,7 +143,7 @@ nrow(det5yes)/nrow(detpast5)
 
 # 0.943662
 
-# Receiver array 6 ####
+## Receiver array 6 ####
 ## Any fish detected by array 6
 det6 <- distinct(detcoho20[which(detcoho20[,3] == '6'),], tag.ID, array, .keep_all = TRUE)
 
@@ -162,9 +162,11 @@ nrow(det6yes)/nrow(detpast6)
 
 # 0.9393939
 
+# Freshwater 2020 ####
+
 # 2021 ####
 
-# Receiver array 2 ####
+## Receiver array 2 ####
 ## Any fish detected by array 2
 det2 <- distinct(detcoho21[which(detcoho21[,3] == '2'),], tag.ID, array, .keep_all = TRUE)
 
@@ -183,7 +185,7 @@ nrow(det2yes)/nrow(detpast2)
 
 ## There were zero coho detected beyond array 2 in 2021
 
-# Receiver array 3 ####
+## Receiver array 3 ####
 ## Any fish detected by array 3
 det3 <- distinct(detcoho21[which(detcoho21[,3] == '3'),], tag.ID, array, .keep_all = TRUE)
 
@@ -202,7 +204,7 @@ nrow(det3yes)/nrow(detpast3)
 
 # 0.5 if you don't include array 1, 0.25 if you do
 
-# Receiver array 4 ####
+## Receiver array 4 ####
 ## Any fish detected by array 4
 det4 <- distinct(detcoho21[which(detcoho21[,3] == '4'),], tag.ID, array, .keep_all = TRUE)
 
@@ -234,7 +236,7 @@ nrow(det4yes)/nrow(detpast4)
 
 ## 0.9375
 
-# Receiver array 5 ####
+## Receiver array 5 ####
 ## Any fish detected by array 5
 det5 <- distinct(detcoho21[which(detcoho21[,3] == '5'),], tag.ID, array, .keep_all = TRUE)
 
@@ -266,7 +268,7 @@ nrow(det5yes)/nrow(detpast5)
 
 # 0.826087
 
-# Receiver array 6 ####
+## Receiver array 6 ####
 ## Any fish detected by array 6
 det6 <- distinct(detcoho21[which(detcoho21[,3] == '6'),], tag.ID, array, .keep_all = TRUE)
 
@@ -285,3 +287,10 @@ nrow(det6yes)/nrow(detpast6)
 
 # 0.8333333
 
+<<<<<<< HEAD
+# Freshwater 2021 ####
+
+
+
+=======
+>>>>>>> 173152ced44f0ae880ddbc133fe4c91709ec4c2c

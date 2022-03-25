@@ -1,2 +1,2 @@
 mcode,date,stat.week,tag.group,card,fish,dir,time.in,sex,length,time.out,species,notes,age,lat,long,mesh.size,secchi.dis,secchi.re,air,water,wind.sp,wind.dir,cloud
-factor,character,factor,factor,integer,integer,factor,character,factor,numeric,character,character,character,factor,numeric,numeric,character,numeric,numeric,numeric,numeric,numeric,factor,numeric
+numeric,character,factor,factor,integer,integer,factor,character,factor,numeric,character,character,character,factor,numeric,numeric,character,numeric,numeric,numeric,numeric,numeric,factor,numeric
