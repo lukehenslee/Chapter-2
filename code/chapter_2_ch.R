@@ -102,3 +102,5 @@ cohoB$ch <- str_pad(histbx$V4, width = 7, side =('right'), pad = '0')
 
 
 histc <- histx[which(substr(histx, 1, 1) == 'C')]
+
+# Need to write code to create 'ch5'
