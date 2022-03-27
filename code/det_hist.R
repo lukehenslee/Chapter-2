@@ -73,80 +73,83 @@ tags <- rbind(tag.raw.2020, tag.raw.2021)
 capture.loc <- vector()
   
   # Start for() loop
-for(i in 1:nrow(mcode_raw)) {
-  if(mcode_raw[i,15] < 64.37609 && mcode_raw[i,15] > 64.13129) {
-    capture.loc[i] <- "5"
-} else {
-  if(mcode_raw[i,15] < 64.13129 && mcode_raw[i,15] > 63.95384) {
-    capture.loc[i] <- "6a"
-  } else {
-    if(mcode_raw[i,15] < 63.95384 && mcode_raw[i,15] > 63.69065) {
-      capture.loc[i] <- "6b"
-    } else {
-      capture.loc[i] <- "6c"
+#for(i in 1:nrow(mcode_raw)) {
+  #if(mcode_raw[i,15] < 64.37609 && mcode_raw[i,15] > 64.13129) {
+#    capture.loc[i] <- "5"
+#} else {
+ # if(mcode_raw[i,15] < 64.13129 && mcode_raw[i,15] > 63.95384) {
+  #  capture.loc[i] <- "6a"
+  #} else {
+   # if(mcode_raw[i,15] < 63.95384 && mcode_raw[i,15] > 63.69065) {
+    #  capture.loc[i] <- "6b"
+    #} else {
+     # capture.loc[i] <- "6c"
+    #}
+  #}
+#}
+#}
+
+capture.loc <- vector()
+
+# Start for() loop
+for(i in 1:nrow(tag)) {
+  if(tag[i,15] < 64.37609 && tag[i,15] > 64.13129) {
+    capture.loc[i] <- "A"
+      } else {
+        capture.loc[i] <- "B"
+      }
     }
-  }
-}
-}
+
 
   # Add capture.loc to mcode list
-mcode$capture.loc <- capture.loc
+tag$capture.loc <- capture.loc
 
 # Deploy ymd.hms and unix timestamp ###########################################
   # Combine 'capture.date' and 'time.out' into deploy.ymd.hms
-mcode$deploy.ymd.hms <- as.character(mdy_hm(paste(mcode_raw$capture.date, 
-                                                   mcode_raw$time.out, 
-                                                   sep = " ")))
+#mcode$deploy.ymd.hms <- as.character(mdy_hm(paste(mcode_raw$capture.date, 
+                                                 #  mcode_raw$time.out, 
+                                                  # sep = " ")))
 
   # Create unix timestamp
-mcode$deploy.unix <- as.numeric(mdy_hm(paste(mcode_raw$capture.date, 
-                                              mcode_raw$time.out, sep = " ")), 
-                                 tz = 'US/Alaska')
+#mcode$deploy.unix <- as.numeric(mdy_hm(paste(mcode_raw$capture.date, 
+                                             # mcode_raw$time.out, sep = " ")), 
+                                # tz = 'US/Alaska')
 
 # Detection history ############################################################
   # Create empty vector
-det.hist <- vector()
-ff.det.ymd.hms <- vector()
-ff.det.unix <- vector()
+det.hist <- aggregate(detsum[,3], detsum[1], paste, collapse = '')
+tag <- left_join(tag, det.hist, by = 'tag.ID')
 
-  # Start for() loop
-for(i in 1:nrow(mcode_raw)) {
-  if(mcode_raw[i, 1] %in% det_sum[, 1]) {
-    idx <- dplyr::filter(det_sum, det_sum[, 1] == mcode_raw[i, 1])
-    idx2 <- aggregate(idx[,3], idx[1], paste, collapse = ",")
-    det.hist[i] <- idx2[,2]
-    ff.det.ymd.hms[i] <- idx[nrow(idx), 4]
-    ff.det.unix[i] <- idx[nrow(idx), 5]
-  } else {
-    det.hist[i] <- NA
-  }
-}
+# Remove detections by arrays 5 and 6
+ <- str_replace_all(det.hist$x, '[5,6]', '')
+
+det.hist2[det.hist2 == ''] <- NA
 
   # Add new column to mcode list
 mcode$det.hist <- det.hist
 
 # Recapture ####################################################################
   # Create empty vector
-recap <- vector()
-ff.recap.ymd.hms <- vector()
-ff.recap.unix <- vector()
+recap.hist <- vector()
 
   # This for() loop adds the recap location or returns NA's to applicable rows
   # It also replaces final.fate.ymd.hms and final.fate.unix for recaptured fish
-for(i in 1:nrow(mcode_raw)) {
-  if(mcode_raw[i, 1] %in% recap_dat[ ,5]) {
-    idx <- dplyr::filter(recap_dat, recap_dat[ ,5] == mcode_raw[i, 1]) 
-    recap[i] <- paste0(idx[9]) 
-    ff.recap.ymd.hms[i] <- as.character(mdy_hm(idx[7]))
-    ff.recap.unix[i] <- as.numeric(mdy_hm(idx[7]), 
-                                     tz = 'US/Alaska')
+tag <- left_join(x = tag, y = recap[ ,c(5,9)], by = "tag.ID", all.x=TRUE)
+
+
+for(i in 1:nrow(tag)) {
+  if(tag[i, 1] %in% recap[ ,5]) {
+    idx <- dplyr::filter(recap, recap[ ,5] == tag[i, 1]) 
+    recap.hist[i] <- paste0(idx[9]) 
+    
   } else {
-    recap[i] <- NA
-    ff.recap.ymd.hms[i] <- NA
-    ff.recap.unix[i] <- NA
+    recap.hist[i] <- NA
   }
 }
 
+tag$recap <- ifelse(tag$recap %in% c('6', '6a', '6b', '6c'), 'B', 
+                      ifelse(tag$recap == '5', 'A', 
+                             ifelse(tag$recap == '7', 'X', tag$recap)))
   # Add new column to mcode list
 mcode$recap <- recap
 

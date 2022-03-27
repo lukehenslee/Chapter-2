@@ -60,7 +60,7 @@ p.S.values=rep(0,length(p.S.indices))
 p.S.values
 
 ## now we can specify the parameter structures for each of the different parameter types; 
-## p, phi, and phi.  In keeping with the approach I took in the paper, we will assume that 
+## p, phi, and psi.  In keeping with the approach I took in the paper, we will assume that 
 ## p only varies according to state, but that the p for the successful state is fixed to 1.0
 ## using our index and value terms we defined above.
 
