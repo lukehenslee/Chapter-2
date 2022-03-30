@@ -3,7 +3,7 @@ library(RMark)
 
 ## import data 
 
-SAGR.ms<-read.csv('data/SAGRms.csv', header=T)
+SAGR.ms<-read.csv('RMark/data/SAGRms.csv', header=T)
 
 ## check to see that import successfully brought ch as a character string and our covariates
 ## as numeric.  
