@@ -45,7 +45,35 @@ recap <- read.csv("data/recap.csv", colClasses = paste(col[1,]))
 
 # First, combine 'tag.ID' and 'capture.loc' and 'recap.hist'
 ch <- data.frame(tag.ID = tag[,1], 
-                 capture = capture.loc, 
-                 det = det.hist2, 
-                 recap = tag2$recap)
+                 capture = tag[,25], 
+                 det = tag[,26], 
+                 recap = tag[,27],
+                 stat.week = tag[,3],
+                 year = year(mdy(tag[,2])),
+                 species = tag[,12])
+
+# Now subset for coho 
+ch.coho <- ch[which(ch$species == 'coho'),]
+
+# Now subset for coho assigned to stocks
+## First read in initial ch.coho
+ch.coho.v1 <- read.csv('data/ch_coho.csv')
+ch.coho <- left_join(ch.coho, ch.coho.v1[,c(1,3:4)], by = 'tag.ID')
+
+## Then subset stocks
+ch.coho.stock <- ch.coho[which(is.na(ch.coho$stock) == FALSE),]
+
+## Write it out
+write.csv(ch.coho.stock, 'data/ch_coho_stock.csv')
+
+## Get it back here
+ch.coho.stock <- read.csv('data/ch_coho_stock.csv')
+
+## Pad ch with zeros
+ch.coho.stock$ch <- str_pad(ch.coho.stock$ch, width = 3, side = 'right', pad = 0)
+
+
+## Write it back out
+write.csv(ch.coho.stock, 'data/ch_coho_stock.csv')
+
 

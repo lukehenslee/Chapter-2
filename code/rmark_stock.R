@@ -22,21 +22,20 @@ library(RMark)
 setwd("C:/Users/lukeh/Desktop/Git_repos/Chapter-2")
 
 # Import data ####
-coho <- read.csv('data/ch_coho.csv', colClasses = c('numeric', 'character',
-                    rep('factor', 2)))
-
+coho <- read.csv('data/ch_coho_stock.csv')
+str(coho)
 # Modeling ####
 
 ## Sex ####
 ## Make process data
-coho.proc <- process.data(coho, model = 'Multistrata')
+coho.proc <- process.data(coho, model = 'Multistrata', group = 'stock')
 
 ## Design data
 coho.ddl <- make.design.data(coho.proc)
 
-## Fix detection probabilities 
+## Fix parameters 
 
-### Reference indices and set values
+### Fix p
 p.A <- as.numeric(row.names(coho.ddl$p[coho.ddl$p$A == 1,]))
 p.A.val <- rep(0.92, length(p.A))
 p.B <- as.numeric(row.names(coho.ddl$p[coho.ddl$p$B == 1,]))
@@ -46,27 +45,35 @@ p.X.val <- rep(0.96, length(p.X))
 
 p.fixed <- list(index = c(p.A, p.B, p.X), value = c(p.A.val, p.B.val, p.X.val))
 
+### Fix phi
+S.A <- as.numeric(row.names(coho.ddl$S[coho.ddl$S$A == 1,]))
+S.A.val <- rep(1, length(S.A))
+S.B <- as.numeric(row.names(coho.ddl$S[coho.ddl$S$B == 1,]))
+S.B.val <- rep(1, length(S.B))
+S.X <- as.numeric(row.names(coho.ddl$S[coho.ddl$S$X == 1,]))
+S.X.val <- rep(1, length(S.X))
+
+S.fixed <- list(index = c(S.A, S.B, S.X), value = c(S.A.val, S.B.val, S.X.val))
 # Model selection ####
 
 ms.models <- function ()
 {
   ## phi structures 
-  S.dot <- list(formula = ~1)
-  S.state <- list(formula = ~stratum)
   S.time <- list(formula = ~time)
+  S.state.time <- list(formula = ~time + stratum)
   
   ## fixed values for p based on our earlier analyses
-  p.fixed <- list(fixed = p.fixed)
+  p.fixed <- list(formula = ~stratum)
   
   ## psi
+  ### Single variables
   Psi.dot <- list(formula = ~1)
-  Psi.state <- list(formula = ~stratum)
-  Psi.tostate <- list(formula = ~tostratum)
-  Psi.time <- list(formula = ~time)
+  
+  ### OG
   Psi.state.tostate <- list(formula = ~stratum + tostratum)
   Psi.stateXtostate <- list(formula = ~stratum*tostratum)
-  Psi.state.int.tostate <- list(formula = ~stratum:tostratum)
-  Psi.stateXtostate.time <- list(formula = ~ stratum*tostratum + time)
+  Psi.state.tostate.time <- list(formula = ~stratum + tostratum + time)
+  Psi.state.int.tostate.time <- list(formula = ~stratum*tostratum + time)
   
   cml=create.model.list("Multistrata")
   results=mark.wrapper(cml, data=coho.proc, ddl=coho.ddl, output=FALSE)
@@ -79,13 +86,12 @@ ms.results
 
 # Look at param values for 'best' model
 
-ms.results$S.time.Psi.stateXtostate$results$beta
-ms.results$S.time.Psi.stateXtostate$results$real
+ms.results$S.state.time.p.fixed.Psi.state.tostate$results$real
 
 # Look at the transition matrix
-Psilist <- get.real(ms.results$S.time.Psi.stateXtostate, "Psi", vcv=TRUE)
+Psilist <- get.real(ms.results$S.state.time.p.fixed.Psi.state.tostate.time$results, 'Psi', vcv = TRUE)
 
-Psivalues <- Psilist$estimates
+Psivalues <- Psilist$
 
 TransitionMatrix(Psivalues[Psivalues$time==1,])
 
