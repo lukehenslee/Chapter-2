@@ -90,8 +90,6 @@ Psilist.rev=get.real(mod.rev,"Psi",vcv=TRUE)
 Psivalues=Psilist$estimates
 Psivalues.rev=Psilist.rev$estimates
 TransitionMatrix(Psivalues[Psivalues$time==1,])
-<<<<<<< HEAD
 TransitionMatrix(Psivalues.rev[Psivalues.rev$occ==1,], ch = TRUE)
-=======
 TransitionMatrix(Psivalues.rev[Psivalues.rev$occ==1,])
->>>>>>> 173152ced44f0ae880ddbc133fe4c91709ec4c2c
+
