@@ -23,18 +23,24 @@ coho <- read.csv('ch_coho.csv', colClasses = c('numeric', 'character',
 # Modeling ####
 
 ## Make process data
-coho.proc <- process.data(coho, model = 'Multistrata', group = 'sex')
+coho.proc <- process.data(coho, model = 'Multistrata', groups = 'sex')
 
 ## Design data
 coho.ddl <- make.design.data(coho.proc)
 
+## Fix survival in 'V' to 1
+coho.ddl$S$fix <- NA
+coho.ddl$S$fix[coho.ddl$S$stratum == 'V'] <- 1
+
+coho.ddl$S$fix
+
 ## Fix detection probabilities 
 coho.ddl$p$fix <- NA
-coho.ddl$p$fix[coho.ddl$p$stratum=="A"] <- 0.94
-coho.ddl$p$fix[coho.ddl$p$stratum=="B"] <- 0.96
-coho.ddl$p$fix[coho.ddl$p$stratum=="X"] <- 0.95
-coho.ddl$p$fix[coho.ddl$p$stratum=="V"] <- 1
-coho.ddl$p$fix[coho.ddl$p$stratum=="W"] <- 0.98
+coho.ddl$p$fix[coho.ddl$p$stratum == 'A'] <- 0.94
+coho.ddl$p$fix[coho.ddl$p$stratum == 'B'] <- 0.96
+coho.ddl$p$fix[coho.ddl$p$stratum == 'X'] <- 0.95
+coho.ddl$p$fix[coho.ddl$p$stratum == 'V'] <- 1
+coho.ddl$p$fix[coho.ddl$p$stratum == 'W'] <- 0.98
 
 coho.ddl$p$fix
 
@@ -58,7 +64,14 @@ coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'A' & coho.ddl$Psi$tostratum == 'W'] <-
 # Can't move from 'B' to 'V'
 coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'B' & coho.ddl$Psi$tostratum == 'V'] <- 0
 coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'V' & coho.ddl$Psi$tostratum == 'B'] <- 0
-#coho.ddl$Psi$fix
+# And you can't stay in the same state
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'A' & coho.ddl$Psi$tostratum == 'A'] <- 0
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'B' & coho.ddl$Psi$tostratum == 'B'] <- 0
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'X' & coho.ddl$Psi$tostratum == 'X'] <- 0
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'V' & coho.ddl$Psi$tostratum == 'V'] <- 0
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'W' & coho.ddl$Psi$tostratum == 'W'] <- 0
+
+coho.ddl$Psi$fix
 
 # Model selection ####
 
@@ -69,7 +82,9 @@ coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'V' & coho.ddl$Psi$tostratum == 'B'] <-
 coho.models <- function ()
 {
   ## phi structures 
-  S.state.time <- list(formula = ~stratum)
+  S.state <- list(formula = ~stratum)
+  S.sex <- list(formula = ~sex)
+  S.sex.state <- list(formula = ~sex + stratum)
   
   ## fixed values for p based on our earlier analyses
   p.fixed <- list(formula = ~fix)
@@ -89,105 +104,117 @@ coho.models <- function ()
 coho.results <- coho.models()  
 coho.results
 
-# MALES
-Psilist=get.real(coho.results$S.state.time.p.fixed.Psi.state.tostate.sex,"Psi",vcv=TRUE)
-Psivalues=Psilist$estimates
-coho.psi.M <- TransitionMatrix(Psivalues[Psivalues$time==1&Psivalues$sex == 'M',])
+# Params of 'best' model
+coho.results$S.sex.state.p.fixed.Psi.state.tostate$results$real
 
-coho.results$S.state.time.p.fixed.Psi.state.tostate.sex$results$real
+# Transition matricies 
+Psilist <- get.real(coho.results$S.sex.state.p.fixed.Psi.state.tostate,"Psi",vcv=TRUE)
+Psivalues <- Psilist$estimates
+coho.psi <- TransitionMatrix(Psivalues[Psivalues$time==1&Psivalues$sex == 'M',])
+coho.psi
+
 
 # Build movement estimates and incorporate survival
-S.coho <- coho.results$S.state.time.p.fixed.Psi.state.tostate.sex$results$real[c(1:5), c(1:4)]
-
-# Movement from A
-coho.psi[1,] * S.coho[1,1] # est
-coho.psi[1,] * S.coho[1,3] # lcl
-coho.psi[1,] * S.coho[1,4] # ucl
-1 - sum(coho.psi[1,] * S.coho[1,1]) # Stop migration
-1 - sum(coho.psi[1,] * S.coho[1,3]) # Stop migration lcl
-1 - sum(coho.psi[1,] * S.coho[1,4]) # Stop migration ucl
-
-# Movement from B
-coho.psi[2,] * S.coho[2,1] # est
-coho.psi[2,] * S.coho[2,3] # lcl
-coho.psi[2,] * S.coho[2,4] # ucl
-1 - sum(coho.psi[2,] * S.coho[2,1]) # Stop migration
-1 - sum(coho.psi[2,] * S.coho[2,3]) # Stop migration lcl
-1 - sum(coho.psi[2,] * S.coho[2,4]) # Stop migration ucl
-
-# Movement from V
-coho.psi[3,] * S.coho[3,1] # est
-coho.psi[3,] * S.coho[3,3] # lcl
-coho.psi[3,] * S.coho[3,4] # ucl
-1 - sum(coho.psi[3,] * S.coho[3,1]) # Stop migration
-1 - sum(coho.psi[3,] * S.coho[3,3]) # Stop migration lcl
-1 - sum(coho.psi[3,] * S.coho[3,4]) # Stop migration ucl
-
-# Movement from W
-coho.psi[4,] * S.coho[4,1] # est
-coho.psi[4,] * S.coho[4,3] # lcl
-coho.psi[4,] * S.coho[4,4] # ucl
-1 - sum(coho.psi[4,] * S.coho[4,1]) # Stop migration
-1 - sum(coho.psi[4,] * S.coho[4,3]) # Stop migration lcl
-1 - sum(coho.psi[4,] * S.coho[4,4]) # Stop migration ucl
-
-# Movement from X
-coho.psi[5,] * S.coho[5,1] # est
-coho.psi[5,] * S.coho[5,3] # lcl
-coho.psi[5,] * S.coho[5,4] # ucl
-1 - sum(coho.psi[5,] * S.coho[5,1]) # Stop migration
-1 - sum(coho.psi[5,] * S.coho[5,3]) # Stop migration lcl
-1 - sum(coho.psi[5,] * S.coho[5,4]) # Stop migration ucl
+S.coho.F <- coho.results$S.sex.state.p.fixed.Psi.state.tostate$results$real[c(1:2,9,3:4), c(1:4)]
+S.coho.M <- coho.results$S.sex.state.p.fixed.Psi.state.tostate$results$real[c(5:6,9,7:8), c(1:4)]
 
 # FEMALES
-Psilist=get.real(coho.results$S.state.time.p.fixed.Psi.state.tostate.sex,"Psi",vcv=TRUE)
-Psivalues=Psilist$estimates
-coho.psi.F <- TransitionMatrix(Psivalues[Psivalues$time==1&Psivalues$sex == 'F',])
-
-coho.results$S.state.time.p.fixed.Psi.state.tostate.sex$results$real
-
-# Build movement estimates and incorporate survival
-S.coho <- coho.results$S.state.time.p.fixed.Psi.state.tostate.sex$results$real[c(1:5), c(1:4)]
+coho.psi.F.est <- coho.psi
+coho.psi.F.lcl <- coho.psi
+coho.psi.F.ucl <- coho.psi
 
 # Movement from A
-coho.psi[1,] * S.coho[1,1] # est
-coho.psi[1,] * S.coho[1,3] # lcl
-coho.psi[1,] * S.coho[1,4] # ucl
-1 - sum(coho.psi[1,] * S.coho[1,1]) # Stop migration
-1 - sum(coho.psi[1,] * S.coho[1,3]) # Stop migration lcl
-1 - sum(coho.psi[1,] * S.coho[1,4]) # Stop migration ucl
+coho.psi.F.est[1,] <- coho.psi[1,] * S.coho.F[1,1] # est
+coho.psi.F.lcl[1,] <- coho.psi[1,] * S.coho.F[1,3] # lcl
+coho.psi.F.ucl[1,] <- coho.psi[1,] * S.coho.F[1,4] # ucl
+coho.psi.F.est[1,1] <- 1 - sum(coho.psi[1,] * S.coho.F[1,1]) # Stop migration
+coho.psi.F.lcl[1,1] <- 1 - sum(coho.psi[1,] * S.coho.F[1,3]) # Stop migration lcl
+coho.psi.F.ucl[1,1] <- 1 - sum(coho.psi[1,] * S.coho.F[1,4]) # Stop migration ucl
 
 # Movement from B
-coho.psi[2,] * S.coho[2,1] # est
-coho.psi[2,] * S.coho[2,3] # lcl
-coho.psi[2,] * S.coho[2,4] # ucl
-1 - sum(coho.psi[2,] * S.coho[2,1]) # Stop migration
-1 - sum(coho.psi[2,] * S.coho[2,3]) # Stop migration lcl
-1 - sum(coho.psi[2,] * S.coho[2,4]) # Stop migration ucl
+coho.psi.F.est[2,] <- coho.psi[2,] * S.coho.F[2,1] # est
+coho.psi.F.lcl[2,] <- coho.psi[2,] * S.coho.F[2,3] # lcl
+coho.psi.F.ucl[2,] <- coho.psi[2,] * S.coho.F[2,4] # ucl
+coho.psi.F.est[2,2] <- 1 - sum(coho.psi[2,] * S.coho.F[2,1]) # Stop migration
+coho.psi.F.lcl[2,2] <- 1 - sum(coho.psi[2,] * S.coho.F[2,3]) # Stop migration lcl
+coho.psi.F.ucl[2,2] <- 1 - sum(coho.psi[2,] * S.coho.F[2,4]) # Stop migration ucl
 
 # Movement from V
-coho.psi[3,] * S.coho[3,1] # est
-coho.psi[3,] * S.coho[3,3] # lcl
-coho.psi[3,] * S.coho[3,4] # ucl
-1 - sum(coho.psi[3,] * S.coho[3,1]) # Stop migration
-1 - sum(coho.psi[3,] * S.coho[3,3]) # Stop migration lcl
-1 - sum(coho.psi[3,] * S.coho[3,4]) # Stop migration ucl
+coho.psi.F.est[3,] <- coho.psi[3,] * S.coho.F[3,1] # est
+coho.psi.F.lcl[3,] <- coho.psi[3,] * S.coho.F[3,3] # lcl
+coho.psi.F.ucl[3,] <- coho.psi[3,] * S.coho.F[3,4] # ucl
+coho.psi.F.est[3,3] <- 1 - sum(coho.psi[3,] * S.coho.F[3,1]) # Stop migration
+coho.psi.F.lcl[3,3] <- 1 - sum(coho.psi[3,] * S.coho.F[3,3]) # Stop migration lcl
+coho.psi.F.ucl[3,3] <- 1 - sum(coho.psi[3,] * S.coho.F[3,4]) # Stop migration ucl
 
 # Movement from W
-coho.psi[4,] * S.coho[4,1] # est
-coho.psi[4,] * S.coho[4,3] # lcl
-coho.psi[4,] * S.coho[4,4] # ucl
-1 - sum(coho.psi[4,] * S.coho[4,1]) # Stop migration
-1 - sum(coho.psi[4,] * S.coho[4,3]) # Stop migration lcl
-1 - sum(coho.psi[4,] * S.coho[4,4]) # Stop migration ucl
+coho.psi.F.est[4,] <- coho.psi[4,] * S.coho.F[4,1] # est
+coho.psi.F.lcl[4,] <- coho.psi[4,] * S.coho.F[4,3] # lcl
+coho.psi.F.ucl[4,] <- coho.psi[4,] * S.coho.F[4,4] # ucl
+coho.psi.F.est[4,4] <- 1 - sum(coho.psi[4,] * S.coho.F[4,1]) # Stop migration
+coho.psi.F.lcl[4,4] <- 1 - sum(coho.psi[4,] * S.coho.F[4,3]) # Stop migration lcl
+coho.psi.F.ucl[4,4] <- 1 - sum(coho.psi[4,] * S.coho.F[4,4]) # Stop migration ucl
 
 # Movement from X
-coho.psi[5,] * S.coho[5,1] # est
-coho.psi[5,] * S.coho[5,3] # lcl
-coho.psi[5,] * S.coho[5,4] # ucl
-1 - sum(coho.psi[5,] * S.coho[5,1]) # Stop migration
-1 - sum(coho.psi[5,] * S.coho[5,3]) # Stop migration lcl
-1 - sum(coho.psi[5,] * S.coho[5,4]) # Stop migration ucl
+coho.psi.F.est[5,] <- coho.psi[5,] * S.coho.F[5,1] # est
+coho.psi.F.lcl[5,] <- coho.psi[5,] * S.coho.F[5,3] # lcl
+coho.psi.F.ucl[5,] <- coho.psi[5,] * S.coho.F[5,4] # ucl
+coho.psi.F.est[5,5] <- 1 - sum(coho.psi[5,] * S.coho.F[5,1]) # Stop migration
+coho.psi.F.lcl[5,5] <- 1 - sum(coho.psi[5,] * S.coho.F[5,3]) # Stop migration lcl
+coho.psi.F.ucl[5,5] <- 1 - sum(coho.psi[5,] * S.coho.F[5,4]) # Stop migration ucl
+
+round(coho.psi.F.est, 3)
+round(coho.psi.F.lcl, 3)
+round(coho.psi.F.ucl, 3)
+
+# MALES
+coho.psi.M.est <- coho.psi
+coho.psi.M.lcl <- coho.psi
+coho.psi.M.ucl <- coho.psi
+
+# Movement from A
+coho.psi.M.est[1,] <- coho.psi[1,] * S.coho.M[1,1] # est
+coho.psi.M.lcl[1,] <- coho.psi[1,] * S.coho.M[1,3] # lcl
+coho.psi.M.ucl[1,] <- coho.psi[1,] * S.coho.M[1,4] # ucl
+coho.psi.M.est[1,1] <- 1 - sum(coho.psi[1,] * S.coho.M[1,1]) # Stop migration
+coho.psi.M.lcl[1,1] <- 1 - sum(coho.psi[1,] * S.coho.M[1,3]) # Stop migration lcl
+coho.psi.M.ucl[1,1] <- 1 - sum(coho.psi[1,] * S.coho.M[1,4]) # Stop migration ucl
+
+# Movement from B
+coho.psi.M.est[2,] <- coho.psi[2,] * S.coho.M[2,1] # est
+coho.psi.M.lcl[2,] <- coho.psi[2,] * S.coho.M[2,3] # lcl
+coho.psi.M.ucl[2,] <- coho.psi[2,] * S.coho.M[2,4] # ucl
+coho.psi.M.est[2,2] <- 1 - sum(coho.psi[2,] * S.coho.M[2,1]) # Stop migration
+coho.psi.M.lcl[2,2] <- 1 - sum(coho.psi[2,] * S.coho.M[2,3]) # Stop migration lcl
+coho.psi.M.ucl[2,2] <- 1 - sum(coho.psi[2,] * S.coho.M[2,4]) # Stop migration ucl
+
+# Movement from V
+coho.psi.M.est[3,] <- coho.psi[3,] * S.coho.M[3,1] # est
+coho.psi.M.lcl[3,] <- coho.psi[3,] * S.coho.M[3,3] # lcl
+coho.psi.M.ucl[3,] <- coho.psi[3,] * S.coho.M[3,4] # ucl
+coho.psi.M.est[3,3] <- 1 - sum(coho.psi[3,] * S.coho.M[3,1]) # Stop migration
+coho.psi.M.lcl[3,3] <- 1 - sum(coho.psi[3,] * S.coho.M[3,3]) # Stop migration lcl
+coho.psi.M.ucl[3,3] <- 1 - sum(coho.psi[3,] * S.coho.M[3,4]) # Stop migration ucl
+
+# Movement from W
+coho.psi.M.est[4,] <- coho.psi[4,] * S.coho.M[4,1] # est
+coho.psi.M.lcl[4,] <- coho.psi[4,] * S.coho.M[4,3] # lcl
+coho.psi.M.ucl[4,] <- coho.psi[4,] * S.coho.M[4,4] # ucl
+coho.psi.M.est[4,4] <- 1 - sum(coho.psi[4,] * S.coho.M[4,1]) # Stop migration
+coho.psi.M.lcl[4,4] <- 1 - sum(coho.psi[4,] * S.coho.M[4,3]) # Stop migration lcl
+coho.psi.M.ucl[4,4] <- 1 - sum(coho.psi[4,] * S.coho.M[4,4]) # Stop migration ucl
+
+# Movement from X
+coho.psi.M.est[5,] <- coho.psi[5,] * S.coho.M[5,1] # est
+coho.psi.M.lcl[5,] <- coho.psi[5,] * S.coho.M[5,3] # lcl
+coho.psi.M.ucl[5,] <- coho.psi[5,] * S.coho.M[5,4] # ucl
+coho.psi.M.est[5,5] <- 1 - sum(coho.psi[5,] * S.coho.M[5,1]) # Stop migration
+coho.psi.M.lcl[5,5] <- 1 - sum(coho.psi[5,] * S.coho.M[5,3]) # Stop migration lcl
+coho.psi.M.ucl[5,5] <- 1 - sum(coho.psi[5,] * S.coho.M[5,4]) # Stop migration ucl
+
+round(coho.psi.M.est, 3)
+round(coho.psi.M.lcl, 3)
+round(coho.psi.M.ucl, 3)
 
 # Now just the models within 4 AIC units
 ms.models.3 <- function ()
