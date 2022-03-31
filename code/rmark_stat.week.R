@@ -23,7 +23,7 @@ coho <- read.csv('ch_coho.csv', colClasses = c('numeric', 'character',
 # Modeling ####
 
 ## Make process data
-coho.proc <- process.data(coho, model = 'Multistrata', group = 'sex')
+coho.proc <- process.data(coho, model = 'Multistrata', groups = 'stock')
 
 ## Design data
 coho.ddl <- make.design.data(coho.proc)
@@ -75,11 +75,12 @@ coho.models <- function ()
   p.fixed <- list(formula = ~fix)
   
   ## psi
-  Psi.time.sex <- list(formula = ~time + sex)
+  Psi.stock <- list(formula = ~stock)
+  Psi.time.stock <- list(formula = ~time + stock)
   Psi.state.tostate <- list(formula = ~stratum + tostratum)
-  Psi.state.tostate.sex <- list(formula = ~stratum + tostratum + sex)
+  Psi.state.tostate.stock <- list(formula = ~stratum + tostratum + stock)
   Psi.state.tostate.time <- list(formula = ~stratum + tostratum + time)
-  Psi.state.tostate.sex.time <- list(formula = ~stratum + tostratum + sex + time)
+  Psi.state.tostate.stock.time <- list(formula = ~stratum + tostratum + stock + time)
   
   cml=create.model.list("Multistrata")
   results=mark.wrapper(cml, data=coho.proc, ddl=coho.ddl, output=FALSE, mlogit0 = TRUE)
@@ -90,11 +91,15 @@ coho.results <- coho.models()
 coho.results
 
 # MALES
-Psilist=get.real(coho.results$S.state.time.p.fixed.Psi.state.tostate.sex,"Psi",vcv=TRUE)
+Psilist=get.real(coho.results$S.state.time.p.fixed.Psi.state.tostate.stock,"Psi",vcv=TRUE)
 Psivalues=Psilist$estimates
-coho.psi.M <- TransitionMatrix(Psivalues[Psivalues$time==1&Psivalues$sex == 'M',])
+coho.psi.U <- TransitionMatrix(Psivalues[Psivalues$time==1&Psivalues$stock == 'Unalakleet',])
+coho.psi.S <- TransitionMatrix(Psivalues[Psivalues$time==1&Psivalues$stock == 'Shaktoolik',])
+coho.psi.T <- TransitionMatrix(Psivalues[Psivalues$time==1&Psivalues$stock == 'Transitory',])
 
-coho.results$S.state.time.p.fixed.Psi.state.tostate.sex$results$real
+
+
+coho.results$S.state.time.p.fixed.Psi.stock$results$real
 
 # Build movement estimates and incorporate survival
 S.coho <- coho.results$S.state.time.p.fixed.Psi.state.tostate.sex$results$real[c(1:5), c(1:4)]
