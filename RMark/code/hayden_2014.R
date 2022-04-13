@@ -184,180 +184,6 @@ library(plyr)
 library(RMark)
 setwd("~/HECWL_analysis/multi-state mark-recap-20130305")
 
-drv <- dbDriver("PostgreSQL")
-db <- dbConnect(drv, dbname="hecwlsp", user = "postgres")
-
-###############################################
-# this threshold represents 2-months.  This should be enough time to eliminate multiple detection events 
-# caused by short term movements away from receiver and still detect a returning fish (i.e., to SGR for spawning.
-###############################################
-thresh <- 5184000
-
-# pull in 2011 Titta releases. Uses glatos_final table to include observations in HEC (Specifically the SCU line)
-dtc <- query(db, "SELECT * FROM (SELECT a.glatos_array, a.detection_timestamp_utc AS detection_date_time_utc, a.animal_id, b.length, b.age, b.sex, a.release_location, a.utc_release_date_time AS release_date_time 
-             FROM glatos_final a LEFT OUTER JOIN tagging b ON a.animal_id = b.animal_id) c WHERE c.release_location = 'Dow Chemical-Tittabawassee River' AND c.release_date_time < timestamp '2012-01-01 00:00:00'")
-
-# pull in tags released.  Capture histories are based on tagging information (not fish recorded in detections)
-tag <- query(db,"SELECT AGE, ANIMAL_ID, LENGTH, SEX, RELEASE_DATE_TIME, SURGERY_LOCATION FROM tagging WHERE surgery_location = 'Tittabawassee' and release_date_time < timestamp '2012-01-01 00:00:00+00'") 
-
-# pull in model structure (created in excel):
-sites <- read.csv("C:\\Users\\Todd\\Documents\\HECWL_analysis\\multi-state mark-recap-20130305\\sites.csv", as.is = TRUE, head = TRUE)
-
-#############################################
-
-# fix time in dtcs:
-dtc$detection_date_time_utc <- paste(dtc$detection_date_time_utc, "00", sep = "")
-dtc$detection_date_time_utc <- as.POSIXct(strptime(dtc$detection_date_time_utc, "%Y-%m-%d %H:%M:%S%z", tz = "GMT"),tz = "GMT")
-
-# convert POSIX time to numeric in dtcs:
-dtc$time <- as.numeric(dtc$detection_date_time_utc)
-dtc <- dtc[order(dtc$animal_id, dtc$time),]
-
-# function assigns arrival event number within a fish
-arrive <- function(x){
-  x$difference <- c(NA,diff(x$time))
-  x$arrival <- c(1,x$glatos_array[2:nrow(x)] != x$glatos_array[1:(nrow(x)-1)]) | x$difference > thresh
-  x$arrival <- as.numeric(x$arrival)
-  x$arrival[1] <- 1
-  x$event <- cumsum(x$arrival)
-  return(x)
-}
-# plyr ddply function is much faster than loop.
-dtc <- ddply(dtc, .(animal_id), arrive)
-
-dtc <- dtc[order(dtc$animal_id, dtc$event, dtc$detection_date_time_utc),]
-dtc$depart <- 0
-
-# function assigns departure event within fish and event
-depart <- function(x){
-  x$depart[(nrow(x))] <- 1
-  return(x)
-}
-
-dtc <- ddply(dtc, .(animal_id, event), depart)
-
-# archive dtc so far.
-det <- dtc
-
-# Recode 'glatos_array' to distinguish outgoing fish movement past SGR and TTB receivers and incoming fish movement past SGR and TTB.  All TTB and SGR without event number 1 or 2
-# are recoded to TTB1 and SGR1, respectively.
-dtc$glatos_array1 <- ifelse((dtc$glatos_array == 'TTB' & dtc$event != 1) & (dtc$glatos_array == 'TTB' & dtc$event != 2), dtc$glatos_array1 <- 'TTB1', 
-                            ifelse((dtc$glatos_array == 'SGR' & dtc$event != 1) & (dtc$glatos_array == 'SGR' & dtc$event != 2), dtc$glatos_array1 <- 'SGR1', dtc$glatos_array1 <- dtc$glatos_array ))
-
-# Recode fish ages to groups (in tagging data) (used for making .inp file).  
-#tag$age_group <- ifelse(tag$age < 6, tag$age_group <- 1, 
-#                   ifelse(tag$age == 6, tag$age_group <- 2, 
-#                    ifelse(tag$age == 7, tag$age_group <- 3, 
-#                     ifelse(tag$age == 8, tag$age_group <- 4, tag$age_group <- 5))))
-
-# Recode fish ages to groups (in tagging data) (used for making .txt file).  
-tag$age_group <- ifelse(tag$age < 6, tag$age_group <- "<age6", 
-                       ifelse(tag$age == 6, tag$age_group <- "age6", 
-                             ifelse(tag$age == 7, tag$age_group <- "age7", 
-                                   ifelse(tag$age == 8, tag$age_group <- "age8", tag$age_group <- "age9+"))))
-
-#tag$age_group <- ifelse(tag$age < 6, tag$age_group <- "<age6", 
-#                       ifelse(tag$age == 6 | tag$age == 7 | tag$age == 8, tag$age_group <- "age6,7,8", tag$age_group <- "age9+"))
-# subset arrivals
-dtc <- dtc[dtc$arrival == 1,]
-dtc <- dtc[order(dtc$animal_id, dtc$detection_date_time_utc),]
-
-# adds states and occasions to dtc based on info in sites data frame
-dtc$occasion <- NA
-dtc$state <- NA
-
-# loop below pulls out each location id for each occasion and state in "sites" dataframe and then identifies "Occasion" and "state" of each detection.
-for(i in 1:nrow(sites)){
-  for(j in 2:ncol(sites)){
-    sites.ij <- sites[i,j]
-    sites.ij <- unlist(strsplit(sites.ij," " ))
-    #below loop links sites location ID with detection based on common array IDs (i.e., GLATOS_ARRAY)
-    for(k in 1:length(sites.ij)){
-      if(!is.na(sites.ij[k])){
-        dtc$occasion[grep(sites.ij[k], dtc$glatos_array1)] <- i  
-        dtc$state[grep(sites.ij[k], dtc$glatos_array1)] <- names(sites)[j]
-      } 
-    }
-  }
-}
-
-
-# loop below assigns "1" for a reversal (i.e., fish doubles back), based on the max occasion for each row to start within fish.
-# this mark-recap model only considers fish movements away from release site and then the return of fish for spawning the following spring.
-
-tags <- sort(unique(dtc$animal_id))
-dtc <- dtc[order(dtc$animal_id, dtc$detection_date_time_utc),]
-dtc$maxDtc <- NA
-for(i in 1:length(tags)){
-  fish.i <- dtc[dtc$animal_id == tags[i],]
-  for(j in 1:nrow(fish.i)){
-    fish.i$maxDtc[j] <- max(fish.i$occasion[1:j], na.rm = TRUE)
-    dtc[match(row.names(fish.i), row.names(dtc)),] <- fish.i
-  }
-}
-
-dtc$rev <- ifelse(dtc$maxDtc > dtc$occasion | is.na(dtc$occasion) == TRUE, 1,0)
-
-#reversals = 1 and non-reversal = 0
-dtc <- dtc[dtc$rev == 0,]
-
-# All fish were released at single location.  Therefore all capture histories start with state "A".  
-# Next line creates a vector of "A" for all tagged fish.
-
-tag$capHist <- "A"
-
-# Loop below selects each tagged animal and then extracts vector 1: max occasion from dtc and creates string of corresponding capture states. 
-for(i in 1:nrow(tag)){
-  dtc.i <- dtc[dtc$animal_id == tag$animal_id[i],]
-  if(nrow(dtc.i) > 0){
-    dtc.i <- dtc.i[1:match(max(dtc.i$occasion), dtc.i$occasion),]
-  }
-  for(j in 2:12){
-    if(j %in% dtc.i$occasion){  
-      tag$capHist[i] <- paste(tag$capHist[i], dtc.i$state[match(j,dtc.i$occasion)],sep = "")
-    } else tag$capHist[i] <- paste(tag$capHist[i], 0, sep = "")
-    
-  }
-}
-# add covariates to capture history
-# add dummy variables for sex to capHist
-# remove 1 undertermined sex:
-tag <- tag[tag$sex != 'U',]
-tag$males <- as.numeric(tag$sex == 'M')
-tag$females <- as.numeric(tag$sex == 'F')
-
-# dummy variables for age groups (use when making .inp file):
-#tag$age_group1 <- ifelse(tag$age_group == 1, 1, 0)
-#tag$age_group2 <- ifelse(tag$age_group == 2, 1, 0)
-#tag$age_group3 <- ifelse(tag$age_group == 3, 1, 0)
-#tag$age_group4 <- ifelse(tag$age_group == 4, 1, 0)
-#tag$age_group5 <- ifelse(tag$age_group == 5, 1, 0)
-
-
-# combine sex and age groups with capHist
-#markCH <-  paste(tag$capHist," ",tag$males," ",tag$females," ",tag$age_group1," ",tag$age_group2," ",tag$age_group3," ", tag$age_group4," ",tag$age_group5, " ;","/* ", tag$animal_id, " */" ,sep = "")
-#markCH <- paste(tag$capHist," ",tag$males," ",tag$females," ;","/* ", tag$animal_id, " */" ,sep = "")
-
-RMark <- tag
-RMark$comments <- paste("/* ", tag$animal_id, " */")
-RMark$freq <- 1
-
-RMark <- RMark[, names(RMark) != "release_date_time"]
-names(RMark)[1:2] <- c("ch", "freq")
-colnames(RMark)[colnames(RMark) == "capHist"] <- "ch"
-row.names(RMark) <- RMark$comments
-RMark <- RMark[c("ch", "freq", "age", "animal_id", "length", "sex", "surgery_location", "age_group", "males", "females")]
-
-write.table(RMark, "HECWL_sex.txt", quote = FALSE, sep = "\t", row.names = TRUE, col.names = TRUE)
-
-
-#no sex, etc
-#markCH <- paste(tag$capHist, "1;")
-#markCH <-  paste(tag$capHist," ","1;", "/* ", tag$animal_id, " */" ,sep = "")
-
-# write this table for import in to Program MARK.
-
-#write.table(markCH, "hecwl_sex_20130305.inp", quote = FALSE, col.names = FALSE, row.names = FALSE)
 
 ################
 
@@ -376,14 +202,17 @@ write.table(RMark, "HECWL_sex.txt", quote = FALSE, sep = "\t", row.names = TRUE,
 #hec <- convert.inp("hecwl_sex_age.inp", group.df=data.frame(sex = rep(c('male','female'),5), age = rep(c('<6','age6', 'age7', 'age8', 'age9+'), 2), use.comments=TRUE) #convert to data frame for RMark
 
 # loads in data from .txt file- easier format with multiple grouping factors.  Use field.types to manipulate what factors will be used in analysis.  "S" = skip
-hec <- import.chdata("HECWL_SEX.txt", header = TRUE, use.comments = TRUE, field.types=c('n','s','s', 's', 'f','s','f','s','s'))
+# hec <- import.chdata("HECWL_SEX.txt", header = TRUE, use.comments = TRUE, field.types=c('n','s','s', 's', 'f','s','f','s','s'))
+
+hec <- read.csv('RMark/data/pone.0114833.s002.csv')
+hec$ch <- hec$detection.history
 
 # adds in group designation (if needed)
 # hec$group <- 1
 # hec$group <- as.factor(hec$group)  
 
 # creates processed data:
-hec.processed <- process.data(hec, groups=c('sex', 'age_group'), model = "Multistrata")
+hec.processed <- process.data(hec, groups=c('sex'), model = "Multistrata")
 
 
 # creates design data- setting pim.type = "time" results in model with single release cohort.
