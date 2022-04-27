@@ -5,7 +5,10 @@
 #
 #Purpose: 
 #==================================================================================================
-#NOTES: 
+# NOTES: Three states-
+# A: Shaktoolik
+# B: Unalakleet
+# C: Outside
 #==================================================================================================
 
 # Load packages ####
@@ -17,67 +20,37 @@ library(RMark)
 setwd("C:/Users/lukeh/Desktop/Git_repos/Chapter-2")
 
 # Import data ####
-coho <- read.csv('ch_coho.csv', colClasses = c('numeric', 'character',
+coho <- read.csv('ch_coho_v2.csv', colClasses = c('numeric', 'character',
                     rep('factor', 4)))
-# Remove NA
+
+# Remove NA since we are only estimating for coho assigned to stocks
 coho <- coho[complete.cases(coho),]
 
 # Modeling ####
 
-## Make process data
-coho.proc <- process.data(coho, model = 'Multistrata', groups = c('stock'))
+## Make process data- groups are 'sex' and 'stock'
+coho.proc <- process.data(coho, model = 'Multistrata', groups = c('stock', 
+                                                                  'sex', 'stat.week'))
 
 ## Design data
 coho.ddl <- make.design.data(coho.proc)
 
 ## Fix detection probabilities 
 coho.ddl$p$fix <- NA
-coho.ddl$p$fix[coho.ddl$p$stratum == 'A'] <- 0.94
-coho.ddl$p$fix[coho.ddl$p$stratum == 'B'] <- 0.96
-coho.ddl$p$fix[coho.ddl$p$stratum == 'X'] <- 0.95
-coho.ddl$p$fix[coho.ddl$p$stratum == 'V'] <- 1
-coho.ddl$p$fix[coho.ddl$p$stratum == 'W'] <- 0.98
+coho.ddl$p$fix[coho.ddl$p$stratum == 'A'] <- 1
+coho.ddl$p$fix[coho.ddl$p$stratum == 'B'] <- 1
+coho.ddl$p$fix[coho.ddl$p$stratum == 'X'] <- 1
+
 
 coho.ddl$p$fix
 
-## Fix psi prob to zero for times and states
-coho.ddl$Psi$fix <- NA
-# Can't move FROM 'X', 'V', or 'W' in the first move
-## Remove if there is no time structure
-#coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'X' & coho.ddl$Psi$time == 1] <- 0
-#coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'V' & coho.ddl$Psi$time == 1] <- 0
-#coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'W' & coho.ddl$Psi$time == 1] <- 0
-# Can't move directly between 'X' and 'V' and 'W'
-coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'X' & coho.ddl$Psi$tostratum == 'V'] <- 0
-coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'X' & coho.ddl$Psi$tostratum == 'W'] <- 0
-coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'V' & coho.ddl$Psi$tostratum == 'X'] <- 0
-coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'V' & coho.ddl$Psi$tostratum == 'W'] <- 0
-coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'W' & coho.ddl$Psi$tostratum == 'V'] <- 0
-coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'W' & coho.ddl$Psi$tostratum == 'X'] <- 0
-# Can't move from 'A' to 'W'
-coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'W' & coho.ddl$Psi$tostratum == 'A'] <- 0
-coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'A' & coho.ddl$Psi$tostratum == 'W'] <- 0
-# Can't move from 'B' to 'V'
-coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'B' & coho.ddl$Psi$tostratum == 'V'] <- 0
-coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'V' & coho.ddl$Psi$tostratum == 'B'] <- 0
-# And you can't stay in the same state
-coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'A' & coho.ddl$Psi$tostratum == 'A'] <- 0
-coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'B' & coho.ddl$Psi$tostratum == 'B'] <- 0
-coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'X' & coho.ddl$Psi$tostratum == 'X'] <- 0
-coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'V' & coho.ddl$Psi$tostratum == 'V'] <- 0
-coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'W' & coho.ddl$Psi$tostratum == 'W'] <- 0
-
-coho.ddl$Psi$fix
 
 # Model selection ####
-
-
-# All the best models have a 'state' and 'time' structure for phi (but I don't want any time structure), 
-# and 'stratum', 'tostratum', 'sex' and 'time' for psi- let's build a 'marklist'
 
 coho.models <- function ()
 {
   ## phi structures 
+  
   ### single
   S.state <- list(formula = ~stratum)
   S.stock <- list(formula = ~stock)
@@ -99,62 +72,6 @@ coho.models <- function ()
   
   ### quad
   S.state.stock.sex.week <- list(formula = ~stratum + stock + sex + stat.week)
-  
-  ### interaction
-  S.state.stockxweek <- list(formula = ~stratum + stock:week)
-  
-  
-  ## fixed values for p based on our earlier analyses
-  p.fixed <- list(formula = ~fix)
-  
-  ## psi
-  ### single
-  Psi.state <- list(formula = ~stratum)
-  Psi.state.tostate <- list(formula)
-  Psi.stock <- list(formula = ~stock)
-  Psi.sex <- list(formula = ~sex)
-  Psi.week <- list(formula = ~stat.week)
-  
-  ### double
-  Psi.stock.state <- list(formula = ~stock + stratum)
-  Psi.sex.state <- list(formula = ~sex + stratum)
-  Psi.week.state <- list(formula = ~stat.week + stratum)
-  Psi.week.stock <- list(formula = ~stock + stat.week)
-  Psi.week.sex <- list(formula = ~stock + sex)
-  
-  ### triple 
-  Psi.stock.state.sex <- list(formula = ~stock + stratum + sex)
-  Psi.stock.state.week <- list(formula = ~stock + stratum + stat.week)
-  Psi.stock.sex.week <- list(formula = ~stock + sex + stat.week)
-  Psi.sex.state.week <- list(formula = ~stock + stratum + stat.week)
-  
-  ### quad
-  Psi.state.stock.sex.week <- list(formula = ~stratum + stock + sex + stat.week)
-  
-  ### interaction
-  Psi.state.stockxweek <- list(formula = ~stratum + stock:week)
-  
-  cml=create.model.list("Multistrata")
-  results=mark.wrapper(cml, data=coho.proc, ddl=coho.ddl, output=FALSE, mlogit0 = TRUE)
-  return(results)
-}
-
-# Run again and omit any models with a delta AICc of > 10
-coho.models <- function ()
-{
-  ## phi structures 
-  
-  ### double
-  S.stock.state <- list(formula = ~stock + stratum)
-  
-  ### triple 
-  S.stock.state.sex <- list(formula = ~stock + stratum + sex)
-  S.stock.state.week <- list(formula = ~stock + stratum + stat.week)
-  S.sex.state.week <- list(formula = ~sex + stratum + stat.week)
-  
-  ### quad
-  S.state.stock.sex.week <- list(formula = ~stratum + stock + sex + stat.week)
-  
   
   ## fixed values for p based on our earlier analyses
   p.fixed <- list(formula = ~fix)
@@ -179,24 +96,52 @@ coho.models <- function ()
   ### quad
   Psi.state.tostate.stock.sex.week <- list(formula = ~stratum + tostratum + stock + sex + stat.week)
   
-  ### interaction
-  Psi.state.tostate.stockxweek <- list(formula = ~stratum + tostratum + stock*week)
-  
   cml=create.model.list("Multistrata")
   results=mark.wrapper(cml, data=coho.proc, ddl=coho.ddl, output=FALSE, mlogit0 = TRUE)
   return(results)
 }
 
-coho.results2 <- coho.models()  
-coho.results2
+coho.results <- coho.models()
+coho.results
+# S(~stock + stratum)p(~fix)Psi(~tostratum)- Delta: 0, Weight: 0.6676
+# S(~stock + stratum + sex)p(~fix)Psi(~tostratum)- Delta: 2.065, Weight: 0.2377
+# S(~stock + stratum + stat.week)p(~fix)Psi(~tostratum)- Delta: 6.209, Weight: 0.0299
+# S(~stratum + stock + sex + stat.week)p(~fix)Psi(~tostratum)- Delta: 8.189, Weight: 0.0113
+# S(~stock + stratum)p(~fix)Psi(~stratum + tostratum)- Delta: 8.291, Weight: 0.0106
+# S(~stock + stratum)p(~fix)Psi(~sex + stratum + tostratum)- Delta: 10.377, Weight: 0.00372
+# S(~stock + stratum + sex)p(~fix)Psi(~stratum + tostratum)- Delta: 10.377, Weight: 0.00372
+
+# The first two models make up 0.9053 of the model weight
+
+# Model averaging 
+
+coho.models <- function ()
+{
+  ## phi structures 
+  S.stock.state <- list(formula = ~stock + stratum)
+  S.stock.state.sex <- list(formula = ~stock + stratum + sex)
+  
+  ## fixed values for p based on our earlier analyses
+  p.fixed <- list(formula = ~fix)
+  
+  ## psi
+  Psi.tostate <- list(formula = ~tostratum)
+
+  cml=create.model.list("Multistrata")
+  results=mark.wrapper(cml, data=coho.proc, ddl=coho.ddl, output=FALSE, mlogit0 = TRUE)
+  return(results)
+}
+
+coho.results <- coho.models()  
+coho.results
 
 # Params of 'best' model
 coho.results2$S.stock.state.p.fixed.Psi.tostate$results$real
 
 # Transition matricies 
-Psilist <- get.real(coho.results2$S.stock.state.p.fixed.Psi.tostate,"Psi",vcv=TRUE)
+Psilist <- get.real(coho.results2$S.stock.state.p.fixed.Psi.state.tostate,"Psi",vcv=TRUE)
 Psivalues <- Psilist$estimates
-coho.psi <- TransitionMatrix(Psivalues[Psivalues$time==1 & Psivalues$stock == 'Shaktoolik',])
+coho.psi <- TransitionMatrix(Psivalues[Psivalues$time==1&Psivalues$stock == 'Shaktoolik',])
 coho.psi
 
 

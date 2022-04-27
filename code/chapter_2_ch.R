@@ -67,13 +67,13 @@ ch.coho.stock <- ch.coho[which(is.na(ch.coho$stock) == FALSE),]
 write.csv(ch.coho.stock, 'data/ch_coho_stock.csv')
 
 ## Get it back here
-ch.coho.stock <- read.csv('data/ch_coho_stock.csv')
+ch.coho.stock <- read.csv('ch_coho_v3.csv')
 
 ## Pad ch with zeros
-ch.coho.stock$ch <- str_pad(ch.coho.stock$ch, width = 3, side = 'right', pad = 0)
+ch.coho.stock$ch <- str_pad(ch.coho.stock$ch, width = 4, side = 'left', pad = 0)
 
 
 ## Write it back out
-write.csv(ch.coho.stock, 'data/ch_coho_stock.csv')
+write.csv(ch.coho.stock, 'data/ch_coho_v3.csv')
 
 
