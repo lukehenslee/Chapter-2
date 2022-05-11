@@ -25,7 +25,7 @@ coho <- coho[complete.cases(coho),]
 # Modeling ####
 
 ## Make process data
-coho.proc <- process.data(coho, model = 'Multistrata', groups = c('stock', 'sex',
+coho.proc <- process.data(coho, model = 'Multistrata', groups = c('stock', 
                                                                   'stat.week'))
 
 ## Design data
@@ -136,6 +136,8 @@ coho.models <- function ()
 # S(~stock + stratum)p(~fix)Psi(~stratum + tostratum)- Delta: 8.291, Weight: 0.0106
 # S(~stock + stratum)p(~fix)Psi(~sex + stratum + tostratum)- Delta: 10.377, Weight: 0.00372
 # S(~stock + stratum + sex)p(~fix)Psi(~stratum + tostratum)- Delta: 10.377, Weight: 0.00372
+
+
 
 # Params of 'best' model
 coho.results2$S.stock.state.p.fixed.Psi.tostate$results$real

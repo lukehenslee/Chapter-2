@@ -20,7 +20,7 @@ library(RMark)
 setwd("C:/Users/lukeh/Desktop/Git_repos/Chapter-2")
 
 # Import data ####
-coho <- read.csv('data/ch_coho_v3.csv')
+coho <- read.csv('data/ch_coho_v4.csv')
 
 # Remove NA since we are only estimating for coho assigned to stocks
 coho <- coho[complete.cases(coho),]
