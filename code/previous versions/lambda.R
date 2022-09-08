@@ -140,10 +140,10 @@ nrow(det4yes) / nrow(detnof4)
 det5 <- distinct(detcoho[which(detcoho[,3] == '5'),], tag.ID, array, .keep_all = TRUE)
 
 ## Fish tagged north of 5
-tagn5 <- distinct(detcoho[which(detcoho[,7] %in% c('6a', '5')),], tag.ID, .keep_all = TRUE)
+tagn5 <- distinct(detcoho[which(detcoho[,7] == c('6a', '5')),], tag.ID, .keep_all = TRUE)
 
 ## Fish tagged south of 5
-tags5 <- distinct(detcoho[which(detcoho[,7] == '6b'),], tag.ID, .keep_all = TRUE)
+tags5 <- distinct(detcoho[which(detcoho[,8] %in% c('6b')),], tag.ID, .keep_all = TRUE)
 
 ## Any fish tagged north of 5, and detected south of 5
 sof5 <- c('U', 'G', '6', '7')

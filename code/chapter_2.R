@@ -1,11 +1,32 @@
 #==================================================================================================
 # Thesis chapter 2
-# Date: February 21, 2022
+# Date: September 7, 2022
 # Creator: Luke Henslee, ADF&G and CFOS, UAF
 #
-#Purpose: 
+# Purpose: Assign detection histories to coho salmon with paired sex, stock, and
+# capture timing data. 
+#
+# Model movement probabilities 
 #==================================================================================================
-#NOTES:  
+#NOTES: Multistate mark recapture detection histories
+#
+# States:
+# A: Shaktoolik
+# V: Entered stream draining into Shaktoolik subdistrict
+# B: Unalakleet
+# W: Entered stream draining into Unalakleet subdistrict
+# X: Outside
+#
+# Detection histories are unrestricted in length, but only transitions between
+# two states is recorded.
+# 
+# The following are impossible transitions:
+# X<->V
+# X<->W
+# V<->W
+# A<->W
+# B<->V
+#
 #==================================================================================================
 
 # Load packages ####
@@ -15,62 +36,242 @@ library(data.table)
 library(lubridate)
 library(openxlsx)
 library(magrittr)
+library(RMark)
 
 # Set working directory ####
-setwd("C:/Users/lhhenslee/Desktop/Luke/School/Thesis/Chapter 2")
+setwd("C:/Users/lhhenslee/Desktop/git_repo/Chapter-2")
 
 # Import data ####
 
-# Import m-code list for reference 
-col <- read.csv("data/mcode_colClasses.csv", header = T)
+ch <- read.csv('data/ch/ch_stock_sex_week_year.csv')
 
-tags <- read.csv("data/mcode.csv", colClasses = paste(col[1,]))
+# Modeling ####
 
-# Import receiver data  
-col <- read.csv("data/det_colClasses.csv")
+## Make process data
+coho.proc <- process.data(ch, model = 'Multistrata', 
+                          groups = c('sex', 'stat.week', 'year', 'stock'))
 
-det <- read.csv("data/det.csv", colClasses = paste(col[1,]))
+## Design data
+coho.ddl <- make.design.data(coho.proc)
 
-# Import detection summaries
-col <- read.csv('data/detsum_colClasses.csv')
+## Fix survival in 'V' to 1 ## Update 9/7- Don't think I need to do this
+coho.ddl$S$fix <- NA
+coho.ddl$S$fix[coho.ddl$S$stratum == 'V'] <- 1
 
-detsum <- read.csv('data/detsum.csv', colClasses = paste(col[1,]))
+coho.ddl$S$fix
 
-# Data manipulation ####
+## Fix detection probabilities 
+coho.ddl$p$fix <- NA
+coho.ddl$p$fix[coho.ddl$p$stratum == 'A'] <- 0.94
+coho.ddl$p$fix[coho.ddl$p$stratum == 'B'] <- 0.96
+coho.ddl$p$fix[coho.ddl$p$stratum == 'X'] <- 0.95
+coho.ddl$p$fix[coho.ddl$p$stratum == 'V'] <- 1
+coho.ddl$p$fix[coho.ddl$p$stratum == 'W'] <- 0.98
 
-## Filter coho ####
-tags$tag.ID <- tags$mcode
+coho.ddl$p$fix
 
-coho <- tags %>% 
-  filter(species == 'coho')
+## Fix psi prob to zero for times and states
+coho.ddl$Psi$fix <- NA
+# Can't move FROM 'X', 'V', or 'W' in the first move
+## Remove if there is no time structure
+#coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'X' & coho.ddl$Psi$time == 1] <- 0
+#coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'V' & coho.ddl$Psi$time == 1] <- 0
+#coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'W' & coho.ddl$Psi$time == 1] <- 0
+# Can't move directly between 'X' and 'V' and 'W'
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'X' & coho.ddl$Psi$tostratum == 'V'] <- 0
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'X' & coho.ddl$Psi$tostratum == 'W'] <- 0
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'V' & coho.ddl$Psi$tostratum == 'X'] <- 0
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'V' & coho.ddl$Psi$tostratum == 'W'] <- 0
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'W' & coho.ddl$Psi$tostratum == 'V'] <- 0
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'W' & coho.ddl$Psi$tostratum == 'X'] <- 0
+# Can't move from 'A' to 'W'
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'W' & coho.ddl$Psi$tostratum == 'A'] <- 0
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'A' & coho.ddl$Psi$tostratum == 'W'] <- 0
+# Can't move from 'B' to 'V'
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'B' & coho.ddl$Psi$tostratum == 'V'] <- 0
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'V' & coho.ddl$Psi$tostratum == 'B'] <- 0
+# And you can't stay in the same state
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'A' & coho.ddl$Psi$tostratum == 'A'] <- 0
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'B' & coho.ddl$Psi$tostratum == 'B'] <- 0
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'X' & coho.ddl$Psi$tostratum == 'X'] <- 0
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'V' & coho.ddl$Psi$tostratum == 'V'] <- 0
+coho.ddl$Psi$fix[coho.ddl$Psi$stratum == 'W' & coho.ddl$Psi$tostratum == 'W'] <- 0
 
-coho.det <- semi_join(detsum, coho, by = 'tag.ID')
+coho.ddl$Psi$fix
 
-## This analysis only uses marine receiver detection, so delete inriver det
-det.2 <- det %>% 
-  filter(substr(receiver.ID, 1, 1) %in% c(1:7))
-
-## Add an array ID
-det.2$array.ID <- substr(det.2$receiver.ID, 1, 1)
-
-## Add lateral ID
-det.2$lat.ID <- substr(det.2$receiver.ID, 3, 3)
+# Model selection ####
 
 
-ggplot(coho.det, aes(x = rec)) +
-  geom_histogram(stat = 'count')
+# All the best models have a 'state' and 'time' structure for phi (but I don't want any time structure), 
+# and 'stratum', 'tostratum', 'sex' and 'time' for psi- let's build a 'marklist'
 
-## Assign distance from shore
-### Receivers had wider spacing in 2021, so we need to account for that
-### In 2020, receivers were placed 300 m from shore and 300 m between 
-### for a total distance of 2.1 km from shore.
-### In 2021, the first receiver was 300 m from shore and the next receiver was
-### 300 m from that- subsequent receivers were placed 500 meters apart for a 
-### total distance of 3.1 m from shore.
+coho.models <- function ()
+{
+  ## phi structures 
+  S.state <- list(formula = ~stratum)
+  S.sex <- list(formula = ~sex)
+  S.sex.state <- list(formula = ~sex + stratum)
+  
+  ## fixed values for p based on our earlier analyses
+  p.fixed <- list(formula = ~fix)
+  
+  ## psi
+  Psi.time.sex <- list(formula = ~time + sex)
+  Psi.state.tostate <- list(formula = ~stratum + tostratum)
+  Psi.state.tostate.sex <- list(formula = ~stratum + tostratum + sex)
+  Psi.state.tostate.time <- list(formula = ~stratum + tostratum + time)
+  Psi.state.tostate.sex.time <- list(formula = ~stratum + tostratum + sex + time)
+  
+  cml=create.model.list("Multistrata")
+  results=mark.wrapper(cml, data=coho.proc, ddl=coho.ddl, output=FALSE, mlogit0 = TRUE)
+  return(results)
+}
 
-### In 2020, 300, 600, 900, 1200, 1500, 1800
+coho.results <- coho.models()  
+coho.results
 
-### In 2021, 300, 600, 1100, 1600, 2100, 2600
+# Params of 'best' model
+coho.results$S.sex.state.p.fixed.Psi.state.tostate$results$real
 
-### First, parse mdy.hms
-det.2
+# Transition matricies 
+Psilist <- get.real(coho.results$S.sex.state.p.fixed.Psi.state.tostate,"Psi",vcv=TRUE)
+Psivalues <- Psilist$estimates
+coho.psi <- TransitionMatrix(Psivalues[Psivalues$time==1&Psivalues$sex == 'M',])
+coho.psi
+
+
+# Build movement estimates and incorporate survival
+S.coho.F <- coho.results$S.sex.state.p.fixed.Psi.state.tostate$results$real[c(1:2,9,3:4), c(1:4)]
+S.coho.M <- coho.results$S.sex.state.p.fixed.Psi.state.tostate$results$real[c(5:6,9,7:8), c(1:4)]
+
+# FEMALES
+coho.psi.F.est <- coho.psi
+coho.psi.F.lcl <- coho.psi
+coho.psi.F.ucl <- coho.psi
+
+# Movement from A
+coho.psi.F.est[1,] <- coho.psi[1,] * S.coho.F[1,1] # est
+coho.psi.F.lcl[1,] <- coho.psi[1,] * S.coho.F[1,3] # lcl
+coho.psi.F.ucl[1,] <- coho.psi[1,] * S.coho.F[1,4] # ucl
+coho.psi.F.est[1,1] <- 1 - sum(coho.psi[1,] * S.coho.F[1,1]) # Stop migration
+coho.psi.F.lcl[1,1] <- 1 - sum(coho.psi[1,] * S.coho.F[1,3]) # Stop migration lcl
+coho.psi.F.ucl[1,1] <- 1 - sum(coho.psi[1,] * S.coho.F[1,4]) # Stop migration ucl
+
+# Movement from B
+coho.psi.F.est[2,] <- coho.psi[2,] * S.coho.F[2,1] # est
+coho.psi.F.lcl[2,] <- coho.psi[2,] * S.coho.F[2,3] # lcl
+coho.psi.F.ucl[2,] <- coho.psi[2,] * S.coho.F[2,4] # ucl
+coho.psi.F.est[2,2] <- 1 - sum(coho.psi[2,] * S.coho.F[2,1]) # Stop migration
+coho.psi.F.lcl[2,2] <- 1 - sum(coho.psi[2,] * S.coho.F[2,3]) # Stop migration lcl
+coho.psi.F.ucl[2,2] <- 1 - sum(coho.psi[2,] * S.coho.F[2,4]) # Stop migration ucl
+
+# Movement from V
+coho.psi.F.est[3,] <- coho.psi[3,] * S.coho.F[3,1] # est
+coho.psi.F.lcl[3,] <- coho.psi[3,] * S.coho.F[3,3] # lcl
+coho.psi.F.ucl[3,] <- coho.psi[3,] * S.coho.F[3,4] # ucl
+coho.psi.F.est[3,3] <- 1 - sum(coho.psi[3,] * S.coho.F[3,1]) # Stop migration
+coho.psi.F.lcl[3,3] <- 1 - sum(coho.psi[3,] * S.coho.F[3,3]) # Stop migration lcl
+coho.psi.F.ucl[3,3] <- 1 - sum(coho.psi[3,] * S.coho.F[3,4]) # Stop migration ucl
+
+# Movement from W
+coho.psi.F.est[4,] <- coho.psi[4,] * S.coho.F[4,1] # est
+coho.psi.F.lcl[4,] <- coho.psi[4,] * S.coho.F[4,3] # lcl
+coho.psi.F.ucl[4,] <- coho.psi[4,] * S.coho.F[4,4] # ucl
+coho.psi.F.est[4,4] <- 1 - sum(coho.psi[4,] * S.coho.F[4,1]) # Stop migration
+coho.psi.F.lcl[4,4] <- 1 - sum(coho.psi[4,] * S.coho.F[4,3]) # Stop migration lcl
+coho.psi.F.ucl[4,4] <- 1 - sum(coho.psi[4,] * S.coho.F[4,4]) # Stop migration ucl
+
+# Movement from X
+coho.psi.F.est[5,] <- coho.psi[5,] * S.coho.F[5,1] # est
+coho.psi.F.lcl[5,] <- coho.psi[5,] * S.coho.F[5,3] # lcl
+coho.psi.F.ucl[5,] <- coho.psi[5,] * S.coho.F[5,4] # ucl
+coho.psi.F.est[5,5] <- 1 - sum(coho.psi[5,] * S.coho.F[5,1]) # Stop migration
+coho.psi.F.lcl[5,5] <- 1 - sum(coho.psi[5,] * S.coho.F[5,3]) # Stop migration lcl
+coho.psi.F.ucl[5,5] <- 1 - sum(coho.psi[5,] * S.coho.F[5,4]) # Stop migration ucl
+
+round(coho.psi.F.est, 3)
+round(coho.psi.F.lcl, 3)
+round(coho.psi.F.ucl, 3)
+
+# MALES
+coho.psi.M.est <- coho.psi
+coho.psi.M.lcl <- coho.psi
+coho.psi.M.ucl <- coho.psi
+
+# Movement from A
+coho.psi.M.est[1,] <- coho.psi[1,] * S.coho.M[1,1] # est
+coho.psi.M.lcl[1,] <- coho.psi[1,] * S.coho.M[1,3] # lcl
+coho.psi.M.ucl[1,] <- coho.psi[1,] * S.coho.M[1,4] # ucl
+coho.psi.M.est[1,1] <- 1 - sum(coho.psi[1,] * S.coho.M[1,1]) # Stop migration
+coho.psi.M.lcl[1,1] <- 1 - sum(coho.psi[1,] * S.coho.M[1,3]) # Stop migration lcl
+coho.psi.M.ucl[1,1] <- 1 - sum(coho.psi[1,] * S.coho.M[1,4]) # Stop migration ucl
+
+# Movement from B
+coho.psi.M.est[2,] <- coho.psi[2,] * S.coho.M[2,1] # est
+coho.psi.M.lcl[2,] <- coho.psi[2,] * S.coho.M[2,3] # lcl
+coho.psi.M.ucl[2,] <- coho.psi[2,] * S.coho.M[2,4] # ucl
+coho.psi.M.est[2,2] <- 1 - sum(coho.psi[2,] * S.coho.M[2,1]) # Stop migration
+coho.psi.M.lcl[2,2] <- 1 - sum(coho.psi[2,] * S.coho.M[2,3]) # Stop migration lcl
+coho.psi.M.ucl[2,2] <- 1 - sum(coho.psi[2,] * S.coho.M[2,4]) # Stop migration ucl
+
+# Movement from V
+coho.psi.M.est[3,] <- coho.psi[3,] * S.coho.M[3,1] # est
+coho.psi.M.lcl[3,] <- coho.psi[3,] * S.coho.M[3,3] # lcl
+coho.psi.M.ucl[3,] <- coho.psi[3,] * S.coho.M[3,4] # ucl
+coho.psi.M.est[3,3] <- 1 - sum(coho.psi[3,] * S.coho.M[3,1]) # Stop migration
+coho.psi.M.lcl[3,3] <- 1 - sum(coho.psi[3,] * S.coho.M[3,3]) # Stop migration lcl
+coho.psi.M.ucl[3,3] <- 1 - sum(coho.psi[3,] * S.coho.M[3,4]) # Stop migration ucl
+
+# Movement from W
+coho.psi.M.est[4,] <- coho.psi[4,] * S.coho.M[4,1] # est
+coho.psi.M.lcl[4,] <- coho.psi[4,] * S.coho.M[4,3] # lcl
+coho.psi.M.ucl[4,] <- coho.psi[4,] * S.coho.M[4,4] # ucl
+coho.psi.M.est[4,4] <- 1 - sum(coho.psi[4,] * S.coho.M[4,1]) # Stop migration
+coho.psi.M.lcl[4,4] <- 1 - sum(coho.psi[4,] * S.coho.M[4,3]) # Stop migration lcl
+coho.psi.M.ucl[4,4] <- 1 - sum(coho.psi[4,] * S.coho.M[4,4]) # Stop migration ucl
+
+# Movement from X
+coho.psi.M.est[5,] <- coho.psi[5,] * S.coho.M[5,1] # est
+coho.psi.M.lcl[5,] <- coho.psi[5,] * S.coho.M[5,3] # lcl
+coho.psi.M.ucl[5,] <- coho.psi[5,] * S.coho.M[5,4] # ucl
+coho.psi.M.est[5,5] <- 1 - sum(coho.psi[5,] * S.coho.M[5,1]) # Stop migration
+coho.psi.M.lcl[5,5] <- 1 - sum(coho.psi[5,] * S.coho.M[5,3]) # Stop migration lcl
+coho.psi.M.ucl[5,5] <- 1 - sum(coho.psi[5,] * S.coho.M[5,4]) # Stop migration ucl
+
+round(coho.psi.M.est, 3)
+round(coho.psi.M.lcl, 3)
+round(coho.psi.M.ucl, 3)
+
+# Now just the models within 4 AIC units
+ms.models.3 <- function ()
+{
+  ## phi structures 
+  S.state.time <- list(formula = ~stratum + time)
+  
+  ## fixed values for p based on our earlier analyses
+  p.fixed <- list(formula = ~fix)
+  
+  ## psi
+  Psi.state.tostate <- list(formula = ~stratum + tostratum)
+  Psi.state.tostate.time <- list(formula = ~stratum + tostratum + time)
+  Psi.state.tostate.sex.time <- list(formula = ~stratum + tostratum + sex + time)
+  
+  cml=create.model.list("Multistrata")
+  results=mark.wrapper(cml, data=coho.proc, ddl=coho.ddl, output=FALSE)
+  return(results)
+}
+
+ms.results.3 <- ms.models.3()  
+
+ms.results.3
+
+# Okay, these look pretty good- let's model average our param estimates
+
+coho.mod.avg <- model.average(ms.results.2, vcv = T)
+coho.Psi.mod.avg <- model.average(ms.results.2, 'Psi', vcv = T, drop = FALSE)
+coho.Psi.mod.avg.est <- coho.Psi.mod.avg$estimates
+
+# The problem is- using 'time' as a Psi covariate doesn't really mean anything
+
+
+
