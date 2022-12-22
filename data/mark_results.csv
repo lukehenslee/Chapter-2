@@ -1,0 +1,137 @@
+group,estimate,lcl,ucl
+S sA gShaktoolikF c1 a0 o1 t1,1,1,1
+S sA gShaktoolikF c1 a1 o2 t2,0.2984963,0.1924052,0.4318075
+S sA gShaktoolikF c1 a2 o3 t3,0.1196652,0.0614709,0.2200354
+S sB gShaktoolikF c1 a0 o1 t1,1,1,1
+S sB gShaktoolikF c1 a1 o2 t2,0.1123953,0.0376145,0.2909069
+S sB gShaktoolikF c1 a2 o3 t3,0.0388792,0.0116315,0.1220729
+S sX gShaktoolikF c1 a0 o1 t1,1,0.9999998,1.0000002
+S sX gShaktoolikF c1 a1 o2 t2,0.0093459,0.0018637,0.0454986
+S sX gShaktoolikF c1 a2 o3 t3,0.0030047,0.000576467,0.0155029
+S sA gTransitoryF c1 a0 o1 t1,1,1,1
+S sA gTransitoryF c1 a1 o2 t2,0.9463377,0.827964,0.9847606
+S sA gTransitoryF c1 a2 o3 t3,0.8492528,0.5928048,0.9561413
+S sB gTransitoryF c1 a0 o1 t1,1,0.9999999,1.0000001
+S sB gTransitoryF c1 a1 o2 t2,0.8399497,0.6565982,0.9350836
+S sB gTransitoryF c1 a2 o3 t3,0.6263799,0.3689175,0.8278261
+S sX gTransitoryF c1 a0 o1 t1,1,1,1
+S sX gTransitoryF c1 a1 o2 t2,0.2810892,0.1420112,0.480149
+S sX gTransitoryF c1 a2 o3 t3,0.111036,0.0486711,0.2336833
+S sA gUnalakleetF c1 a0 o1 t1,1,1,1
+S sA gUnalakleetF c1 a1 o2 t2,0.7064869,0.4607336,0.8714852
+S sA gUnalakleetF c1 a2 o3 t3,0.4346868,0.1999798,0.7028513
+S sB gUnalakleetF c1 a0 o1 t1,1,1,1
+S sB gUnalakleetF c1 a1 o2 t2,0.417352,0.3568272,0.4804739
+S sB gUnalakleetF c1 a2 o3 t3,0.1862157,0.1275156,0.2637685
+S sX gUnalakleetF c1 a0 o1 t1,1,1,1
+S sX gUnalakleetF c1 a1 o2 t2,0.0506628,0.0143163,0.1639385
+S sX gUnalakleetF c1 a2 o3 t3,0.0167625,0.0044428,0.0611454
+p sA gShaktoolikF c1 a1 o1 t2,1,1,1
+Psi sA toB gShaktoolikF c1 a0 o1 t1,0.2274786,0.1307937,0.3655751
+Psi sA toB gShaktoolikF c1 a1 o2 t2,0.0994309,0.0394485,0.2288852
+Psi sA toB gShaktoolikF c1 a2 o3 t3,0.0332645,0.0035957,0.2470403
+Psi sA toX gShaktoolikF c1 a0 o1 t1,0.0330839,0.0169081,0.0637317
+Psi sA toX gShaktoolikF c1 a1 o2 t2,0.014461,0.005382,0.038266
+Psi sA toX gShaktoolikF c1 a2 o3 t3,0.0048379,0.000522385,0.0432615
+Psi sB toA gShaktoolikF c1 a0 o1 t1,0.0029991,0.0010568,0.0084811
+Psi sB toA gShaktoolikF c1 a1 o2 t2,0.0010979,0.000306085,0.0039302
+Psi sB toA gShaktoolikF c1 a2 o3 t3,0.000338857,3.16E-05,0.0036283
+Psi sB toX gShaktoolikF c1 a0 o1 t1,0.0027125,0.000950414,0.0077166
+Psi sB toX gShaktoolikF c1 a1 o2 t2,0.000993005,0.000275551,0.0035718
+Psi sB toX gShaktoolikF c1 a2 o3 t3,0.000306477,2.85E-05,0.0032906
+Psi sX toA gShaktoolikF c1 a0 o1 t1,0.1385277,0.0759685,0.2392642
+Psi sX toA gShaktoolikF c1 a1 o2 t2,0.1385277,0.0760651,0.2390139
+Psi sX toA gShaktoolikF c1 a2 o3 t3,0.1385277,0.0759685,0.2392642
+Psi sX toB gShaktoolikF c1 a0 o1 t1,0.8614723,0.7609861,0.9239349
+Psi sX toB gShaktoolikF c1 a1 o2 t2,0.8614723,0.7570197,0.9254449
+Psi sX toB gShaktoolikF c1 a2 o3 t3,0.8614723,0.7570197,0.9254449
+Psi sA toB gTransitoryF c1 a0 o1 t1,0.8726533,0.8090678,0.9172295
+Psi sA toB gTransitoryF c1 a1 o2 t2,0.8719999,0.8085039,0.9166135
+Psi sA toB gTransitoryF c1 a2 o3 t3,0.8696989,0.8058661,0.9147629
+Psi sA toX gTransitoryF c1 a0 o1 t1,0.1269164,0.0823742,0.1905427
+Psi sA toX gTransitoryF c1 a1 o2 t2,0.1268214,0.082313,0.1904031
+Psi sA toX gTransitoryF c1 a2 o3 t3,0.1264867,0.0820905,0.1899253
+Psi sB toA gTransitoryF c1 a0 o1 t1,0.5115808,0.3922208,0.6296347
+Psi sB toA gTransitoryF c1 a1 o2 t2,0.4896443,0.367238,0.6133052
+Psi sB toA gTransitoryF c1 a2 o3 t3,0.4252145,0.2401319,0.6339384
+Psi sB toX gTransitoryF c1 a0 o1 t1,0.4626952,0.3464178,0.5831769
+Psi sB toX gTransitoryF c1 a1 o2 t2,0.4428549,0.3251093,0.567393
+Psi sB toX gTransitoryF c1 a2 o3 t3,0.3845819,0.2168174,0.5851668
+Psi sX toA gTransitoryF c1 a0 o1 t1,0.1385277,0.0759685,0.2392642
+Psi sX toA gTransitoryF c1 a1 o2 t2,0.1385277,0.0760651,0.2390139
+Psi sX toA gTransitoryF c1 a2 o3 t3,0.1385277,0.0760651,0.2390139
+Psi sX toB gTransitoryF c1 a0 o1 t1,0.8614723,0.7570197,0.9254449
+Psi sX toB gTransitoryF c1 a1 o2 t2,0.8614723,0.7609861,0.9239349
+Psi sX toB gTransitoryF c1 a2 o3 t3,0.8614723,0.7609861,0.9239349
+Psi sA toB gUnalakleetF c1 a0 o1 t1,0.7865509,0.7008071,0.8528805
+Psi sA toB gUnalakleetF c1 a1 o2 t2,0.6708239,0.5037058,0.8036088
+Psi sA toB gUnalakleetF c1 a2 o3 t3,0.4413558,0.092658,0.8593958
+Psi sA toX gUnalakleetF c1 a0 o1 t1,0.1143939,0.0738303,0.173079
+Psi sA toX gUnalakleetF c1 a1 o2 t2,0.0975629,0.0600072,0.1547532
+Psi sA toX gUnalakleetF c1 a2 o3 t3,0.0641896,0.018353,0.2010567
+Psi sB toA gUnalakleetF c1 a0 o1 t1,0.0678031,0.0384919,0.1167248
+Psi sB toA gUnalakleetF c1 a1 o2 t2,0.0269411,0.0117202,0.0607148
+Psi sB toA gUnalakleetF c1 a2 o3 t3,0.0086085,0.000934185,0.0746188
+Psi sB toX gUnalakleetF c1 a0 o1 t1,0.0613239,0.0344658,0.1067967
+Psi sB toX gUnalakleetF c1 a1 o2 t2,0.0243667,0.01053,0.0553677
+Psi sB toX gUnalakleetF c1 a2 o3 t3,0.0077859,0.000843535,0.0679774
+Psi sX toA gUnalakleetF c1 a0 o1 t1,0.1385277,0.0759685,0.2392643
+Psi sX toA gUnalakleetF c1 a1 o2 t2,0.1385277,0.0760651,0.2390139
+Psi sX toA gUnalakleetF c1 a2 o3 t3,0.1385277,0.0759685,0.2392642
+Psi sX toB gUnalakleetF c1 a0 o1 t1,0.8614723,0.7455647,0.9295665
+Psi sX toB gUnalakleetF c1 a1 o2 t2,0.8614723,0.7570197,0.9254449
+Psi sX toB gUnalakleetF c1 a2 o3 t3,0.8614723,0.7570197,0.9254449
+Psi sA toB gShaktoolikM c1 a0 o1 t1,0.2543715,0.1516918,0.3942527
+Psi sA toB gShaktoolikM c1 a1 o2 t2,0.1138557,0.0470305,0.2506573
+Psi sA toB gShaktoolikM c1 a2 o3 t3,0.0385688,0.0043533,0.2690382
+Psi sA toX gShaktoolikM c1 a0 o1 t1,0.0369951,0.0194475,0.0692577
+Psi sA toX gShaktoolikM c1 a1 o2 t2,0.0165589,0.0064025,0.0421434
+Psi sA toX gShaktoolikM c1 a2 o3 t3,0.0056094,0.000635018,0.04769
+Psi sB toA gShaktoolikM c1 a0 o1 t1,0.0034962,0.0012553,0.009698
+Psi sB toA gShaktoolikM c1 a1 o2 t2,0.0012806,0.000366671,0.0044626
+Psi sB toA gShaktoolikM c1 a2 o3 t3,0.000395346,3.82E-05,0.0040787
+Psi sB toX gShaktoolikM c1 a0 o1 t1,0.0031621,0.0011289,0.0088249
+Psi sB toX gShaktoolikM c1 a1 o2 t2,0.0011583,0.000330063,0.0040562
+Psi sB toX gShaktoolikM c1 a2 o3 t3,0.000357568,3.45E-05,0.0036994
+Psi sX toA gShaktoolikM c1 a0 o1 t1,0.1385277,0.0760651,0.2390139
+Psi sX toA gShaktoolikM c1 a1 o2 t2,0.1385277,0.0760651,0.2390139
+Psi sX toA gShaktoolikM c1 a2 o3 t3,0.1385277,0.0759685,0.2392642
+Psi sX toB gShaktoolikM c1 a0 o1 t1,0.8614723,0.7609861,0.9239349
+Psi sX toB gShaktoolikM c1 a1 o2 t2,0.8614723,0.7609861,0.9239349
+Psi sX toB gShaktoolikM c1 a2 o3 t3,0.8614723,0.7609861,0.9239349
+Psi sA toB gTransitoryM c1 a0 o1 t1,0.872707,0.8091128,0.9172808
+Psi sA toB gTransitoryM c1 a1 o2 t2,0.8721469,0.8086348,0.9167501
+Psi sA toB gTransitoryM c1 a2 o3 t3,0.8701734,0.8064867,0.9151067
+Psi sA toX gTransitoryM c1 a0 o1 t1,0.1269242,0.0823792,0.1905542
+Psi sA toX gTransitoryM c1 a1 o2 t2,0.1268428,0.0823268,0.1904344
+Psi sA toX gTransitoryM c1 a2 o3 t3,0.1265558,0.0821372,0.1900222
+Psi sB toA gTransitoryM c1 a0 o1 t1,0.5134693,0.3941059,0.6313159
+Psi sB toA gTransitoryM c1 a1 o2 t2,0.494416,0.3735788,0.6159091
+Psi sB toA gTransitoryM c1 a2 o3 t3,0.4371014,0.2629373,0.6282902
+Psi sB toX gTransitoryM c1 a0 o1 t1,0.4644033,0.3480388,0.584777
+Psi sB toX gTransitoryM c1 a1 o2 t2,0.4471706,0.3304727,0.5699947
+Psi sB toX gTransitoryM c1 a2 o3 t3,0.3953329,0.2365943,0.5797003
+Psi sX toA gTransitoryM c1 a0 o1 t1,0.1385277,0.0759685,0.2392642
+Psi sX toA gTransitoryM c1 a1 o2 t2,0.1385277,0.0760651,0.2390139
+Psi sX toA gTransitoryM c1 a2 o3 t3,0.1385277,0.0760651,0.2390139
+Psi sX toB gTransitoryM c1 a0 o1 t1,0.8614723,0.7570197,0.9254449
+Psi sX toB gTransitoryM c1 a1 o2 t2,0.8614723,0.7570197,0.9254449
+Psi sX toB gTransitoryM c1 a2 o3 t3,0.8614723,0.7609861,0.9239349
+Psi sA toB gUnalakleetM c1 a0 o1 t1,0.7978506,0.7211629,0.8576113
+Psi sA toB gUnalakleetM c1 a1 o2 t2,0.6937993,0.5471666,0.8094831
+Psi sA toB gUnalakleetM c1 a2 o3 t3,0.4749314,0.1125277,0.8658161
+Psi sA toX gUnalakleetM c1 a0 o1 t1,0.1160373,0.0750671,0.1751343
+Psi sA toX gUnalakleetM c1 a1 o2 t2,0.1009044,0.0631262,0.1574905
+Psi sA toX gUnalakleetM c1 a2 o3 t3,0.0690728,0.0219653,0.1968724
+Psi sB toA gUnalakleetM c1 a0 o1 t1,0.0774463,0.0476993,0.1233417
+Psi sB toA gUnalakleetM c1 a1 o2 t2,0.0311689,0.0146779,0.0649665
+Psi sB toA gUnalakleetM c1 a2 o3 t3,0.0100173,0.0011501,0.0816603
+Psi sB toX gUnalakleetM c1 a0 o1 t1,0.0700457,0.0426273,0.1130179
+Psi sB toX gUnalakleetM c1 a1 o2 t2,0.0281905,0.0131767,0.0592833
+Psi sB toX gUnalakleetM c1 a2 o3 t3,0.00906,0.0010386,0.0744211
+Psi sX toA gUnalakleetM c1 a0 o1 t1,0.1385277,0.0760651,0.2390139
+Psi sX toA gUnalakleetM c1 a1 o2 t2,0.1385277,0.0760651,0.2390139
+Psi sX toA gUnalakleetM c1 a2 o3 t3,0.1385277,0.0759685,0.2392642
+Psi sX toB gUnalakleetM c1 a0 o1 t1,0.8614723,0.7609861,0.9239349
+Psi sX toB gUnalakleetM c1 a1 o2 t2,0.8614723,0.7609861,0.9239349
+Psi sX toB gUnalakleetM c1 a2 o3 t3,0.8614723,0.7609861,0.9239349

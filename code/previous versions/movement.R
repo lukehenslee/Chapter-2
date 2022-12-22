@@ -24,3 +24,6 @@ detsum2 <- rbind(detsum, mcode)
 detsum3 <- detsum[complete.cases(detsum),]
 
 write.csv(detsum3, 'data/movement.csv')
+
+
+# Preparing movement data 

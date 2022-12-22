@@ -57,6 +57,9 @@ detcoho21 <- merge(det, coho21[,c(18,33)], by = 'tag.ID')
 
 # Marine- both years ####
 
+## Array 1 ####
+det1 <- distinct(detcoho[which(detcoho[,3] == '1'),], tag.ID, array, .keep_all = TRUE)
+
 ## Receiver array 2 ####
 ## Any fish detected by array 2
 det2 <- distinct(detcoho[which(detcoho[,3] == '2'),], tag.ID, array, .keep_all = TRUE)
@@ -188,6 +191,11 @@ nrow(det6yes)/nrow(detpast6)
 
 
 # Marine 2020 ####
+## Array 1 ####
+det1 <- distinct(detcoho20[which(detcoho20[,3] == '1'),], tag.ID, array, .keep_all = TRUE)
+
+sd(c(rep(1, 1), rep(0, 7)))/
+  sqrt(nrow(det4yes))
 
 ## Receiver array 2 ####
 ## Any fish detected by array 2
@@ -232,10 +240,10 @@ nrow(det3yes)/nrow(detpast3)
 det4 <- distinct(detcoho20[which(detcoho20[,3] == '4'),], tag.ID, array, .keep_all = TRUE)
 
 ## Fish tagged north of 4
-tagn4 <- distinct(detcoho20[which(detcoho20[,8] == '5'),], tag.ID, .keep_all = TRUE)
+tagn4 <- distinct(detcoho20[which(detcoho20[,7] == '5'),], tag.ID, .keep_all = TRUE)
 
 ## Fish tagged south of 4
-tags4 <- distinct(detcoho20[which(detcoho20[,8] %in% c('6a', '6b')),], tag.ID, .keep_all = TRUE)
+tags4 <- distinct(detcoho20[which(detcoho20[,7] %in% c('6a', '6b')),], tag.ID, .keep_all = TRUE)
 
 ## Any fish tagged north of 4, and detected south of 4
 sof4 <- c('E', 'U', 'G', '5', '6', '7')
@@ -258,16 +266,18 @@ det4no <- anti_join(detpast4, det4, by = 'tag.ID')
 nrow(det4yes)/nrow(detpast4)
 
 ## 0.92
+sd(c(rep(1, nrow(det4yes)), rep(0, nrow(detpast4))))/
+  sqrt(nrow(det4yes))
 
 ## Receiver array 5 ####
 ## Any fish detected by array 5
 det5 <- distinct(detcoho20[which(detcoho20[,3] == '5'),], tag.ID, array, .keep_all = TRUE)
 
 ## Fish tagged north of 5
-tagn5 <- distinct(detcoho20[which(detcoho20[,8] == c('6a', '5')),], tag.ID, .keep_all = TRUE)
+tagn5 <- distinct(detcoho20[which(detcoho20[,7] == c('6a', '5')),], tag.ID, .keep_all = TRUE)
 
 ## Fish tagged south of 5
-tags5 <- distinct(detcoho20[which(detcoho20[,8] %in% c('6b')),], tag.ID, .keep_all = TRUE)
+tags5 <- distinct(detcoho20[which(detcoho20[,7] %in% c('6b')),], tag.ID, .keep_all = TRUE)
 
 ## Any fish tagged north of 5, and detected south of 5
 sof5 <- c('U', 'G', '6', '7')
@@ -290,6 +300,8 @@ det5no <- anti_join(detpast5, det5, by = 'tag.ID')
 nrow(det5yes)/nrow(detpast5)
 
 # 0.943662
+sd(c(rep(1, nrow(det5yes)), rep(0, nrow(detpast5))))/
+  sqrt(nrow(det5yes))
 
 ## Receiver array 6 ####
 ## Any fish detected by array 6
@@ -310,11 +322,38 @@ nrow(det6yes)/nrow(detpast6)
 
 # 0.9393939
 
+sd(c(rep(1, nrow(det6yes)), rep(0, nrow(detpast6))))/
+  sqrt(nrow(det6yes))
+
+## Array 7 ####
+
+det7 <- distinct(detcoho20[which(detcoho20[,3] == '7'),], tag.ID, array, .keep_all = TRUE)
+
+## Any fish tagged north of 6, and detected south of 6
+sof6 <- c('G', '7')
+
+detpast6 <- distinct(detcoho20[which(detcoho20[,3] %in% sof6),], tag.ID, .keep_all = TRUE)
+
+## Fish detected by array 6 detected beyond array 6
+det6yes <- det6[which(detpast6[,1] %in% det6[,1]),]
+
+det6no <- anti_join(detpast6, det6, by = 'tag.ID')
+
+## Proportion detected
+nrow(det6yes)/nrow(detpast6)
+
+# 0.9393939
+
+sd(c(rep(1, nrow(det6yes)), rep(0, nrow(detpast6))))/
+  sqrt(nrow(det6yes))
+
 # Freshwater 2020 ####
 
 # 2021 ####
 
 ## Receiver array 2 ####
+det1 <- distinct(detcoho21[which(detcoho21[,3] == '1'),], tag.ID, array, .keep_all = TRUE)
+
 ## Any fish detected by array 2
 det2 <- distinct(detcoho21[which(detcoho21[,3] == '2'),], tag.ID, array, .keep_all = TRUE)
 
@@ -352,15 +391,18 @@ nrow(det3yes)/nrow(detpast3)
 
 # 0.5 if you don't include array 1, 0.25 if you do
 
+sd(c(rep(1, nrow(det3yes)), rep(0, nrow(detpast3))))/
+  sqrt(nrow(det3yes))
+
 ## Receiver array 4 ####
 ## Any fish detected by array 4
 det4 <- distinct(detcoho21[which(detcoho21[,3] == '4'),], tag.ID, array, .keep_all = TRUE)
 
 ## Fish tagged north of 4
-tagn4 <- distinct(detcoho21[which(detcoho21[,8] == '5'),], tag.ID, .keep_all = TRUE)
+tagn4 <- distinct(detcoho21[which(detcoho21[,7] == '5'),], tag.ID, .keep_all = TRUE)
 
 ## Fish tagged south of 4
-tags4 <- distinct(detcoho21[which(detcoho21[,8] %in% c('6a', '6b')),], tag.ID, .keep_all = TRUE)
+tags4 <- distinct(detcoho21[which(detcoho21[,7] %in% c('6a', '6b')),], tag.ID, .keep_all = TRUE)
 
 ## Any fish tagged north of 4, and detected south of 4
 sof4 <- c('E', 'U', 'G', '5', '6', '7')
@@ -384,15 +426,18 @@ nrow(det4yes)/nrow(detpast4)
 
 ## 0.9375
 
+sd(c(rep(1, nrow(det4yes)), rep(0, nrow(detpast4))))/
+  sqrt(nrow(det4yes))
+
 ## Receiver array 5 ####
 ## Any fish detected by array 5
 det5 <- distinct(detcoho21[which(detcoho21[,3] == '5'),], tag.ID, array, .keep_all = TRUE)
 
 ## Fish tagged north of 5
-tagn5 <- distinct(detcoho21[which(detcoho21[,8] == c('6a', '5')),], tag.ID, .keep_all = TRUE)
+tagn5 <- distinct(detcoho21[which(detcoho21[,7] == c('6a', '5')),], tag.ID, .keep_all = TRUE)
 
 ## Fish tagged south of 5
-tags5 <- distinct(detcoho21[which(detcoho21[,8] %in% c('6b')),], tag.ID, .keep_all = TRUE)
+tags5 <- distinct(detcoho21[which(detcoho21[,7] %in% c('6b')),], tag.ID, .keep_all = TRUE)
 
 ## Any fish tagged north of 5, and detected south of 5
 sof5 <- c('U', 'G', '6', '7')
@@ -416,6 +461,9 @@ nrow(det5yes)/nrow(detpast5)
 
 # 0.826087
 
+sd(c(rep(1, nrow(det5yes)), rep(0, nrow(detpast5))))/
+  sqrt(nrow(det5yes))
+
 ## Receiver array 6 ####
 ## Any fish detected by array 6
 det6 <- distinct(detcoho21[which(detcoho21[,3] == '6'),], tag.ID, array, .keep_all = TRUE)
@@ -434,6 +482,12 @@ det6no <- anti_join(detpast6, det6, by = 'tag.ID')
 nrow(det6yes)/nrow(detpast6)
 
 # 0.8333333
+
+sd(c(rep(1, nrow(det6yes)), rep(0, nrow(detpast6))))/
+  sqrt(nrow(det6yes))
+
+## Array 7 ####
+det7 <- distinct(detcoho21[which(detcoho21[,3] == '7'),], tag.ID, array, .keep_all = TRUE)
 
 # Scrap ####
 coho <- read.csv('ch_coho_full.csv')
